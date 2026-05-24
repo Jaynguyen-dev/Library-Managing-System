@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  full_name     String
+  email         String         @unique
+  password_hash String
+  role          String         @default("student")
+  is_active     Boolean        @default(true)
+  created_at    DateTime       @default(now())
+  borrows       BorrowRecord[]
+  fines         Fine[]
+}
+
+model Book {
+  id                 Int           @id @default(autoincrement())
+  title              String
+  author             String
+  isbn               String        @unique
+  category           String
+  total_quantity     Int           @default(1)
+  available_quantity Int           @default(1)
+  is_deleted         Boolean       @default(false)
+  created_at         DateTime      @default(now())
+  updated_at         DateTime      @updatedAt
+  borrow_items       BorrowItem[]
+  metadata           BookMetadata?
+
+  @@index([title])
+  @@index([is_deleted])
+  @@index([category])
+}
+
+model BookMetadata {
+  id              Int      @id @default(autoincrement())
+  book_id         Int      @unique
+  cover_image_url String?
+  description     String?  @db.NText
+  publisher       String?
+  publish_year    Int?
+  language        String?  @default("vi")
+  subjects        String?
+  page_count      Int?
+  rating          Float?
+  source_url      String?
+  crawled_at      DateTime?
+  book            Book     @relation(fields: [book_id], references: [id])
+}
+
+model BorrowRecord {
+  id          Int          @id @default(autoincrement())
+  user_id     Int
+  borrow_date DateTime     @default(now())
+  due_date    DateTime
+  return_date DateTime?
+  status      String       @default("active")
+  user        User         @relation(fields: [user_id], references: [id])
+  items       BorrowItem[]
+  fines       Fine[]
+
+  @@index([user_id])
+  @@index([status])
+  @@index([due_date])
+}
+
+model BorrowItem {
+  id               Int          @id @default(autoincrement())
+  borrow_record_id Int
+  book_id          Int
+  quantity         Int          @default(1)
+  borrow_record    BorrowRecord @relation(fields: [borrow_record_id], references: [id])
+  book             Book         @relation(fields: [book_id], references: [id])
+}
+
+model Fine {
+  id               Int          @id @default(autoincrement())
+  borrow_record_id Int
+  user_id          Int
+  amount           Int
+  reason           String       @default("Overdue return")
+  is_paid          Boolean      @default(false)
+  created_at       DateTime     @default(now())
+  borrow_record    BorrowRecord @relation(fields: [borrow_record_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user             User         @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([user_id])
+  @@index([is_paid])
+}
+
+model CrawlLog {
+  id            Int      @id @default(autoincrement())
+  job_type      String
+  isbn          String?
+  status        String   @default("pending")
+  source        String?
+  books_found   Int      @default(0)
+  books_updated Int      @default(0)
+  error_msg     String?
+  started_at    DateTime @default(now())
+  finished_at   DateTime?
+
+  @@index([status])
+  @@index([started_at])
+}

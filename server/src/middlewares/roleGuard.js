@@ -1,0 +1,10 @@
+import { error } from "../utils/responseHelper.js";
+
+export function roleGuard(...roles) {
+  return (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return error(res, "Forbidden", 403);
+    }
+    next();
+  };
+}
