@@ -6,108 +6,86 @@
 -- =============================================================
 
 -- =============================================================
--- PART 1: DELETE all users EXCEPT Thanh Như (ktnhu2006@gmail.com)
+-- PART 1: DELETE ALL USERS
 -- Must delete child records first due to FK constraints.
 -- =============================================================
 
 BEGIN TRANSACTION;
 
--- 1. Delete notifications for users being removed
-DELETE FROM Notification
-WHERE user_id IN (
-  SELECT id FROM [User]
-  WHERE email != N'ktnhu2006@gmail.com'
-);
+-- 1. Delete notifications
+DELETE FROM Notification;
 
--- 2. Delete fine payments linked to fines of users being removed
-DELETE FROM FinePayment
-WHERE fine_id IN (
-  SELECT id FROM Fine
-  WHERE user_id IN (
-    SELECT id FROM [User]
-    WHERE email != N'ktnhu2006@gmail.com'
-  )
-);
+-- 2. Delete fine payments
+DELETE FROM FinePayment;
 
--- 3. Delete wallet transactions for wallets of users being removed
-DELETE FROM WalletTransaction
-WHERE wallet_id IN (
-  SELECT id FROM Wallet
-  WHERE user_id IN (
-    SELECT id FROM [User]
-    WHERE email != N'ktnhu2006@gmail.com'
-  )
-);
+-- 3. Delete wallet transactions
+DELETE FROM WalletTransaction;
 
--- 4. Delete wallets of users being removed
-DELETE FROM Wallet
-WHERE user_id IN (
-  SELECT id FROM [User]
-  WHERE email != N'ktnhu2006@gmail.com'
-);
+-- 4. Delete wallets
+DELETE FROM Wallet;
 
--- 5. Delete fines of users being removed
-DELETE FROM Fine
-WHERE user_id IN (
-  SELECT id FROM [User]
-  WHERE email != N'ktnhu2006@gmail.com'
-);
+-- 5. Delete reservations
+DELETE FROM Reservation;
 
--- 6. Delete borrow items for borrows of users being removed
-DELETE FROM BorrowItem
-WHERE borrow_record_id IN (
-  SELECT id FROM BorrowRecord
-  WHERE user_id IN (
-    SELECT id FROM [User]
-    WHERE email != N'ktnhu2006@gmail.com'
-  )
-);
+-- 6. Delete fines
+DELETE FROM Fine;
 
--- 7. Delete borrow records of users being removed
-DELETE FROM BorrowRecord
-WHERE user_id IN (
-  SELECT id FROM [User]
-  WHERE email != N'ktnhu2006@gmail.com'
-);
+-- 7. Delete borrow items
+DELETE FROM BorrowItem;
 
--- 8. Finally, delete the users (except Thanh Nhu)
-DELETE FROM [User]
-WHERE email != N'ktnhu2006@gmail.com';
+-- 8. Delete borrow records
+DELETE FROM BorrowRecord;
+
+-- 9. Finally, delete all users
+DELETE FROM [User];
 
 COMMIT TRANSACTION;
 
-PRINT '=== PART 1 COMPLETE: All users except Thanh Như deleted ===';
+PRINT '=== PART 1 COMPLETE: All existing users deleted ===';
 
 
 -- =============================================================
 -- PART 2: INSERT new accounts
 -- =============================================================
 
--- Insert Librarian account
+-- Insert Hoàng Nguyễn (user)
+INSERT INTO [User] (full_name, email, password_hash, role, is_active, created_at)
+VALUES (
+  N'Hoàng Nguyễn',
+  N'nvhoang050506@demo.com',
+  N'$2b$10$Z9/stv9FabX.RkgOz7nrFui13SEE/PMTuhWaLYNyXZNzoHXHACFmG',
+  N'user',
+  1,
+  GETDATE()
+);
+
+PRINT 'Inserted: Hoàng Nguyễn (nvhoang050506@demo.com / hoang123)';
+
+-- Insert Thanh Như (user)
+INSERT INTO [User] (full_name, email, password_hash, role, is_active, created_at)
+VALUES (
+  N'Thanh Như',
+  N'ktnhu2006@demo.com',
+  N'$2b$10$MtrPBCiBj4ZoCNEe.Wt5S..vZxHx3wsE5V.XIRIXNu/3BevEzCYwC',
+  N'user',
+  1,
+  GETDATE()
+);
+
+PRINT 'Inserted: Thanh Như (ktnhu2006@demo.com / nhu123)';
+
+-- Insert Librarian
 INSERT INTO [User] (full_name, email, password_hash, role, is_active, created_at)
 VALUES (
   N'Librarian',
   N'librarian@demo.com',
-  N'$2b$10$AJZFFyTXwuQ9IhlM2.VnteKWpVvpelKiw.xFUDYHLex/EHjPSox.K',
+  N'$2b$10$mtXXvVqMC.UgiTSaYof6beQjoVuf4iBvSHWoMINBqtKrSEDGvuR9y',
   N'librarian',
   1,
   GETDATE()
 );
 
 PRINT 'Inserted: Librarian (librarian@demo.com / librarian123)';
-
--- Insert Hoàng Nguyễn account
-INSERT INTO [User] (full_name, email, password_hash, role, is_active, created_at)
-VALUES (
-  N'Hoàng Nguyễn',
-  N'hoang@demo.com',
-  N'$2b$10$3GvlmoNWxKwjaq3nvGtkIOnl2Pn7f1dRc4WUC6l8XEhpBONQ6xlx6',
-  N'student',
-  1,
-  GETDATE()
-);
-
-PRINT 'Inserted: Hoàng Nguyễn (hoang@demo.com / hoang123)';
 
 PRINT '=== PART 2 COMPLETE: New accounts inserted ===';
 

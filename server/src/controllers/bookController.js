@@ -3,8 +3,8 @@ import { success, error } from "../utils/responseHelper.js";
 
 export async function list(req, res, next) {
   try {
-    const { search = "", page, limit, available, status } = req.query;
-    const result = await bookService.listBooks(search, page, limit, available);
+    const { search = "", page, limit, available, category } = req.query;
+    const result = await bookService.listBooks(search, page, limit, available, category);
     return success(res, { books: result.data, pagination: { total: result.total, page: result.page, limit: result.limit, pages: result.pages } });
   } catch (err) { next(err); }
 }

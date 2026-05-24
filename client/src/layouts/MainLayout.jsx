@@ -1,4 +1,5 @@
-import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation, Outlet } from "react-router-dom";
+import { motion } from "framer-motion";
 import { useAuth } from "../contexts/AuthContext";
 
 const PAGE_TITLES = {
@@ -67,9 +68,23 @@ function getInitials(name) {
 }
 
 function getAvatarClass(role) {
-  if (role === "admin") return "";
-  if (role === "student") return "green";
+  if (role === "librarian") return "";
+  if (role === "user") return "green";
   return "amber";
+}
+
+function NavItem({ item, isActive }) {
+  return (
+    <motion.div whileHover={{ x: 2 }} whileTap={{ scale: 0.98 }}>
+      <Link
+        to={item.to}
+        className={`nav-item${isActive ? " active" : ""}`}
+      >
+        <i className={item.icon} aria-hidden="true"></i>
+        {item.label}
+      </Link>
+    </motion.div>
+  );
 }
 
 export default function MainLayout() {
@@ -84,17 +99,25 @@ export default function MainLayout() {
 
   const activePath = location.pathname;
   const topbarTitle = PAGE_TITLES[activePath] || "Dashboard";
-  const isReader = user?.role === "student";
-  const isAdmin = user?.role === "admin";
+  const isReader = user?.role === "user";
+  const isAdmin = user?.role === "librarian";
   const navSections = isReader ? READER_NAV : isAdmin ? ADMIN_NAV : LIBRARIAN_NAV;
 
   return (
     <div className="shell">
-      <nav className="sidebar">
+      <motion.nav
+        className="sidebar"
+        initial={{ x: -60, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+      >
         <div className="sidebar-logo">
-          <div className="sidebar-logo-icon">
+          <motion.div
+            className="sidebar-logo-icon"
+            whileHover={{ rotate: 10, scale: 1.05 }}
+          >
             <i className="ti ti-book-2" aria-hidden="true"></i>
-          </div>
+          </motion.div>
           <span>LibraryLMS</span>
         </div>
 
@@ -102,41 +125,51 @@ export default function MainLayout() {
           <div className="nav-section" key={section.section}>
             <div className="nav-label">{section.section}</div>
             {section.items.map((item) => {
-              const isActive = item.to === "/" ? false : activePath === item.to || activePath.startsWith(item.to + "/") || (activePath === "/dashboard" && item.to === "/dashboard") || (activePath === "/my-dashboard" && item.to === "/my-dashboard");
-              return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={`nav-item${isActive ? " active" : ""}`}
-                >
-                  <i className={item.icon} aria-hidden="true"></i>
-                  {item.label}
-                </Link>
-              );
+              const isActive = activePath === item.to || activePath.startsWith(item.to + "/");
+              return <NavItem key={item.to} item={item} isActive={isActive} />;
             })}
           </div>
         ))}
 
         <div className="sidebar-user">
-          <div className={`avatar${user ? ` ${getAvatarClass(user.role)}` : ""}`}>
+          <motion.div
+            className={`avatar${user ? ` ${getAvatarClass(user.role)}` : ""}`}
+            whileHover={{ scale: 1.1 }}
+          >
             {user ? getInitials(user.full_name) : "?"}
-          </div>
-          <span style={{ flex: 1 }}>{user?.full_name || "User"} — {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ""}</span>
-          <button onClick={handleLogout} className="icon-btn" title="Sign Out" style={{ border: "none", width: "24px", height: "24px", color: "rgba(255,255,255,0.5)" }}>
+          </motion.div>
+          <span style={{ flex: 1, lineHeight: 1.3 }}>
+            <div style={{ color: "rgba(255,255,255,0.85)", fontSize: "13px", fontWeight: 500 }}>{user?.full_name || "User"}</div>
+            <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "11px" }}>{user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ""}</div>
+          </span>
+          <motion.button
+            onClick={handleLogout}
+            className="icon-btn"
+            title="Sign Out"
+            style={{ border: "none", width: "28px", height: "28px", color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.06)", borderRadius: "8px" }}
+            whileHover={{ color: "#fff", background: "rgba(255,255,255,0.12)" }}
+            whileTap={{ scale: 0.9 }}
+          >
             <i className="ti ti-logout"></i>
-          </button>
+          </motion.button>
         </div>
-      </nav>
+      </motion.nav>
 
       <div className="main">
         <div className="topbar">
-          <span className="topbar-title">{topbarTitle}</span>
+          <motion.span
+            className="topbar-title"
+            key={topbarTitle}
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.15 }}
+          >
+            {topbarTitle}
+          </motion.span>
         </div>
 
         <div className="content">
-          <div className="page-enter">
-            <Outlet />
-          </div>
+          <Outlet />
         </div>
       </div>
     </div>

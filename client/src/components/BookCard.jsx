@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 
 const DEFAULT_COVER = "/default-cover.svg";
 const OPEN_LIB_COVERS = "https://covers.openlibrary.org/b/isbn";
@@ -32,7 +33,13 @@ export default function BookCard({ book, isStaff, onDelete, onBorrow, onReserve,
   };
 
   return (
-    <div className="book-card" style={{ cursor: onBorrow || onReserve ? "pointer" : "default" }}>
+    <motion.div
+      className="book-card"
+      style={{ cursor: onBorrow || onReserve ? "pointer" : "default" }}
+      whileHover={{ y: -6, boxShadow: "0 12px 40px rgba(0,0,0,0.5)" }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      onClick={isStaff ? undefined : handleCardClick}
+    >
       {isStaff ? (
         <Link
           to={`/books/${book.id}/edit`}
@@ -52,7 +59,6 @@ export default function BookCard({ book, isStaff, onDelete, onBorrow, onReserve,
         </Link>
       ) : (
         <div
-          onClick={handleCardClick}
           style={{ textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", flex: 1 }}
         >
           <CardContent
@@ -71,7 +77,7 @@ export default function BookCard({ book, isStaff, onDelete, onBorrow, onReserve,
           />
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
 
@@ -79,21 +85,33 @@ function CardContent({ book, currentSrc, setUseFallback, coverSources, availabil
   return (
     <>
       <div className="book-card-cover-wrap">
-        <img
+        <motion.img
           className="book-card-cover"
           src={currentSrc}
           alt={`Cover of ${book.title}`}
           onError={() => setUseFallback((prev) => Math.min(prev + 1, coverSources.length - 1))}
           onLoad={(e) => { if (currentSrc === "/default-cover.svg") e.currentTarget.style.objectFit = "contain"; }}
           loading="lazy"
+          whileHover={{ scale: 1.1 }}
+          transition={{ duration: 0.4 }}
         />
         {userReservation && (
-          <span className={`reservation-badge ${userReservation.status === "notified" ? "badge-blue" : "badge-gray"}`}>
+          <motion.span
+            className={`reservation-badge ${userReservation.status === "notified" ? "badge-blue" : "badge-gray"}`}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+          >
             {userReservation.status === "notified" ? "Available — Borrow Now" : `Reserved #${userReservation.queue_position || "?"}`}
-          </span>
+          </motion.span>
         )}
         {isUnavailable && !userReservation && (
-          <span className="reservation-badge badge-red">Unavailable</span>
+          <motion.span
+            className="reservation-badge badge-red"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+          >
+            Unavailable
+          </motion.span>
         )}
       </div>
       <div className="book-card-body">
@@ -105,9 +123,11 @@ function CardContent({ book, currentSrc, setUseFallback, coverSources, availabil
         </div>
         <div className="book-card-meta">
           <span className={`badge ${book.category ? "badge-blue" : "badge-gray"}`}>
+            <i className="ti ti-tag" style={{ fontSize: "10px" }}></i>
             {book.category || "Uncategorized"}
           </span>
           <span className={`badge ${availabilityClass}`} title={`${book.available_quantity} of ${book.total_quantity} available`}>
+            <i className={`ti ti-${book.available_quantity > 0 ? "check" : "x"}`} style={{ fontSize: "10px" }}></i>
             {availabilityLabel}
           </span>
           {isStaff && (
@@ -115,9 +135,10 @@ function CardContent({ book, currentSrc, setUseFallback, coverSources, availabil
               <Link to={`/books/${book.id}/edit`} className="icon-btn" title="Edit" onClick={(e) => e.stopPropagation()}>
                 <i className="ti ti-edit"></i>
               </Link>
-              <button
+              <motion.button
                 className="icon-btn"
                 title="Delete"
+                whileHover={{ color: "#DC2626", borderColor: "#DC2626" }}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -125,29 +146,31 @@ function CardContent({ book, currentSrc, setUseFallback, coverSources, availabil
                 }}
               >
                 <i className="ti ti-trash"></i>
-              </button>
+              </motion.button>
             </div>
           )}
           {!isStaff && isUnavailable && !userReservation && onReserve && (
-            <button
+            <motion.button
               className="btn btn-sm btn-ghost"
               onClick={(e) => {
                 e.stopPropagation();
                 onReserve(book);
               }}
               style={{ width: "100%", marginTop: "6px", fontSize: "12px" }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
             >
               <i className="ti ti-clock" aria-hidden="true"></i> Reserve
-            </button>
+            </motion.button>
           )}
           {!isStaff && isUnavailable && userReservation?.status === "waiting" && (
             <span className="badge badge-gray" style={{ width: "100%", marginTop: "6px", textAlign: "center" }}>
-              In Queue (#{userReservation.queue_position})
+              <i className="ti ti-clock"></i> In Queue (#{userReservation.queue_position})
             </span>
           )}
           {!isStaff && isUnavailable && userReservation?.status === "notified" && (
             <span className="badge badge-blue" style={{ width: "100%", marginTop: "6px", textAlign: "center" }}>
-              Available — Visit Library
+              <i className="ti ti-bell"></i> Available — Visit Library
             </span>
           )}
         </div>

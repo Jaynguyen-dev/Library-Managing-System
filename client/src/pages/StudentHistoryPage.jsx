@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import api from "../services/api";
 import { formatDate, formatCurrency } from "../utils/format";
@@ -9,7 +10,41 @@ function statusBadge(status, isOverdue, dueDate) {
   const effective = status === "active" && now > due ? "overdue" : status;
   const cls = effective === "overdue" ? "badge-red" : effective === "active" ? "badge-amber" : effective === "return_pending" ? "badge-blue" : "badge-green";
   const label = effective === "return_pending" ? "Pending Return" : effective.charAt(0).toUpperCase() + effective.slice(1);
-  return <span className={`badge ${cls}`}>{label}</span>;
+  const icon = effective === "overdue" ? "ti ti-alert-triangle" : effective === "active" ? "ti ti-book" : effective === "return_pending" ? "ti ti-clock" : "ti ti-check";
+  return <span className={`badge ${cls}`}><i className={icon} style={{ fontSize: "10px" }}></i>{label}</span>;
+}
+
+function ReturnModal({ id, onClose, onConfirm }) {
+  return (
+    <AnimatePresence>
+      <motion.div className="modal-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
+        <motion.div
+          className="confirm-modal" onClick={(e) => e.stopPropagation()}
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        >
+          <div className="confirm-modal-header">
+            <h3>Return Book</h3>
+            <motion.button className="icon-btn" onClick={onClose} whileHover={{ rotate: 90 }} whileTap={{ scale: 0.9 }}>
+              <i className="ti ti-x"></i>
+            </motion.button>
+          </div>
+          <div className="confirm-modal-body">
+            <p>Are you sure you want to request a return for this book?</p>
+            <p style={{ fontSize: "13px", color: "var(--sf-text-2)" }}>
+              Once submitted, please bring the book to the librarian to complete the return process.
+            </p>
+          </div>
+          <div className="confirm-modal-footer">
+            <motion.button className="btn btn-ghost" onClick={onClose} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>Cancel</motion.button>
+            <motion.button className="btn btn-primary" onClick={onConfirm} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>Request Return</motion.button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
 }
 
 export default function StudentHistoryPage() {
@@ -52,7 +87,7 @@ export default function StudentHistoryPage() {
   };
 
   return (
-    <div>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
       <div className="section-header">
         <span className="section-title">My Borrows</span>
       </div>
@@ -68,13 +103,17 @@ export default function StudentHistoryPage() {
       </div>
 
       {loading ? (
-        <div className="card" style={{ padding: "48px", textAlign: "center", color: "var(--sf-text-2)" }}>Loading…</div>
-      ) : borrows.length === 0 ? (
-        <div className="card" style={{ padding: "48px", textAlign: "center", color: "var(--sf-text-2)" }}>
-          {tab === "active" ? "You have no active borrows." : "No history yet."}
+        <div className="card" style={{ padding: "48px", textAlign: "center" }}>
+          <div className="skeleton" style={{ height: 20, width: "30%", margin: "0 auto" }}></div>
         </div>
+      ) : borrows.length === 0 ? (
+        <motion.div className="card" style={{ padding: "48px", textAlign: "center", color: "var(--sf-text-2)" }}
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <i className="ti ti-history" style={{ fontSize: "40px", display: "block", marginBottom: "12px" }}></i>
+          {tab === "active" ? "You have no active borrows." : "No history yet."}
+        </motion.div>
       ) : (
-        <div className="card">
+        <motion.div className="card" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
           <table>
             <thead>
               <tr>
@@ -101,9 +140,9 @@ export default function StudentHistoryPage() {
                     {tab === "active" && (
                       <td>
                         {canReturn(b) ? (
-                          <button className="btn btn-primary btn-sm" onClick={() => setReturningId(b.id)}>
+                          <motion.button className="btn btn-primary btn-sm" onClick={() => setReturningId(b.id)} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
                             Return
-                          </button>
+                          </motion.button>
                         ) : (
                           <span style={{ fontSize: "12px", color: "var(--sf-text-2)" }}>
                             {b.status === "return_pending" ? "Awaiting confirmation" : ""}
@@ -116,71 +155,12 @@ export default function StudentHistoryPage() {
               })}
             </tbody>
           </table>
-        </div>
+        </motion.div>
       )}
 
       {returningId && (
-        <div className="modal-overlay" onClick={() => setReturningId(null)}>
-          <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="confirm-modal-header">
-              <h3>Return Book</h3>
-              <button className="icon-btn" onClick={() => setReturningId(null)}>
-                <i className="ti ti-x"></i>
-              </button>
-            </div>
-            <div className="confirm-modal-body">
-              <p>Are you sure you want to request a return for this book?</p>
-              <p style={{ fontSize: "13px", color: "var(--sf-text-2)" }}>
-                Once submitted, please bring the book to the librarian to complete the return process.
-              </p>
-            </div>
-            <div className="confirm-modal-footer">
-              <button className="btn btn-ghost" onClick={() => setReturningId(null)}>Cancel</button>
-              <button className="btn btn-primary" onClick={doReturn}>Request Return</button>
-            </div>
-          </div>
-        </div>
+        <ReturnModal id={returningId} onClose={() => setReturningId(null)} onConfirm={doReturn} />
       )}
-
-      <style>{`
-        .confirm-modal {
-          background: #fff;
-          border-radius: 12px;
-          max-width: 420px;
-          width: 100%;
-          box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-          animation: modalFadeIn 0.2s ease;
-        }
-        .confirm-modal-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 18px 20px 0;
-        }
-        .confirm-modal-header h3 {
-          margin: 0;
-          font-size: 17px;
-          font-weight: 600;
-        }
-        .confirm-modal-body {
-          padding: 16px 20px;
-        }
-        .confirm-modal-body p {
-          margin: 0 0 8px;
-          font-size: 14px;
-          line-height: 1.5;
-        }
-        .confirm-modal-footer {
-          display: flex;
-          justify-content: flex-end;
-          gap: 8px;
-          padding: 12px 20px 18px;
-        }
-        @keyframes modalFadeIn {
-          from { opacity: 0; transform: scale(0.96); }
-          to { opacity: 1; transform: scale(1); }
-        }
-      `}</style>
-    </div>
+    </motion.div>
   );
 }

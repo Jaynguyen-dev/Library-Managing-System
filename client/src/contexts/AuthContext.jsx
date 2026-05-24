@@ -5,8 +5,16 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
-    const stored = localStorage.getItem("lms_user");
-    return stored ? JSON.parse(stored) : null;
+    try {
+      const stored = localStorage.getItem("lms_user");
+      if (!stored) return null;
+      const parsed = JSON.parse(stored);
+      if (!parsed || typeof parsed !== "object") return null;
+      return parsed;
+    } catch {
+      localStorage.removeItem("lms_user");
+      return null;
+    }
   });
   const [token, setToken] = useState(() => localStorage.getItem("lms_token"));
   const [loading, setLoading] = useState(() => Boolean(localStorage.getItem("lms_token")));

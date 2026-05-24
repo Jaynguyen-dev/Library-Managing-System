@@ -9,7 +9,7 @@ export async function register(fullName, email, password) {
 
   const passwordHash = await bcrypt.hash(password, 10);
   const user = await prisma.user.create({
-    data: { full_name: fullName, email, password_hash: passwordHash, role: "student" },
+    data: { full_name: fullName, email, password_hash: passwordHash, role: "user" },
     select: { id: true, full_name: true, email: true, role: true, is_active: true, created_at: true },
   });
   return user;

@@ -9,28 +9,41 @@ dotenv.config();
 const OPEN_LIB_COVERS = "https://covers.openlibrary.org/b/isbn";
 
 async function seedUsers() {
+  // ── 1. Delete all existing users (child records first) ──
+  console.log("Deleting all existing users...");
+  await prisma.finePayment.deleteMany();
+  await prisma.walletTransaction.deleteMany();
+  await prisma.notification.deleteMany();
+  await prisma.reservation.deleteMany();
+  await prisma.fine.deleteMany();
+  await prisma.borrowItem.deleteMany();
+  await prisma.borrowRecord.deleteMany();
+  await prisma.wallet.deleteMany();
+  await prisma.user.deleteMany();
+  console.log("All existing users deleted");
+
+  // ── 2. Insert new users ──
   const hash = (pwd) => bcrypt.hash(pwd, 10);
 
   const users = [
-    { email: "admin@demo.com", full_name: "Admin User", password: await hash("admin123"), role: "admin" },
-    { email: "librarian@demo.com", full_name: "Librarian", password: await hash("lib123"), role: "librarian" },
-    { email: "student@demo.com", full_name: "Student A", password: await hash("stu123"), role: "student" },
+    { email: "nvhoang050506@demo.com", full_name: "Hoàng Nguyễn", password: await hash("hoang123"), role: "user" },
+    { email: "ktnhu2006@demo.com", full_name: "Thanh Như", password: await hash("nhu123"), role: "user" },
+    { email: "librarian@demo.com", full_name: "Librarian", password: await hash("librarian123"), role: "librarian" },
   ];
 
   for (const u of users) {
-    await prisma.user.upsert({
-      where: { email: u.email },
-      update: { password_hash: u.password },
-      create: {
+    await prisma.user.create({
+      data: {
         full_name: u.full_name,
         email: u.email,
         password_hash: u.password,
         role: u.role,
       },
     });
+    console.log(`  Created: ${u.full_name} (${u.email})`);
   }
 
-  console.log("Users seeded (idempotent upsert)");
+  console.log("Users seeded");
 }
 
 async function seedBooks() {
@@ -45,6 +58,88 @@ async function seedBooks() {
     { title: "The Art of Computer Programming", author: "Donald Knuth", isbn: "9780201896831", category: "Computer Science", total_quantity: 1 },
     { title: "Database System Concepts", author: "Silberschatz et al.", isbn: "9780073523323", category: "Computer Science", total_quantity: 3 },
     { title: "Sapiens", author: "Yuval Noah Harari", isbn: "9780062316110", category: "History", total_quantity: 3 },
+    // ── Education ──
+    { title: "Pedagogy of the Oppressed", author: "Paulo Freire", isbn: "9780826412768", category: "Education", total_quantity: 2 },
+    { title: "The Elements of Style", author: "Strunk & White", isbn: "9780205309023", category: "Education", total_quantity: 2 },
+    { title: "How to Win Friends and Influence People", author: "Dale Carnegie", isbn: "9780671027032", category: "Education", total_quantity: 3 },
+    // ── Literature ──
+    { title: "Pride and Prejudice", author: "Jane Austen", isbn: "9780141439518", category: "Literature", total_quantity: 3 },
+    { title: "1984", author: "George Orwell", isbn: "9780451524935", category: "Literature", total_quantity: 3 },
+    { title: "The Great Gatsby", author: "F. Scott Fitzgerald", isbn: "9780743273565", category: "Literature", total_quantity: 2 },
+    // ── Romance ──
+    { title: "The Notebook", author: "Nicholas Sparks", isbn: "9781455582877", category: "Romance", total_quantity: 2 },
+    { title: "Outlander", author: "Diana Gabaldon", isbn: "9780440212560", category: "Romance", total_quantity: 2 },
+    { title: "Jane Eyre", author: "Charlotte Brontë", isbn: "9780141441146", category: "Romance", total_quantity: 3 },
+    // ── Technology ──
+    { title: "The Mythical Man-Month", author: "Frederick Brooks", isbn: "9780201835953", category: "Technology", total_quantity: 2 },
+    { title: "Structure and Interpretation of Computer Programs", author: "Sussman & Abelson", isbn: "9780262510875", category: "Technology", total_quantity: 2 },
+    { title: "Code Complete", author: "Steve McConnell", isbn: "9780735619678", category: "Technology", total_quantity: 2 },
+    // ── Fantasy ──
+    { title: "The Hobbit", author: "J.R.R. Tolkien", isbn: "9780547928227", category: "Fantasy", total_quantity: 3 },
+    { title: "Harry Potter and the Sorcerer's Stone", author: "J.K. Rowling", isbn: "9780590353427", category: "Fantasy", total_quantity: 3 },
+    { title: "A Game of Thrones", author: "George R.R. Martin", isbn: "9780553593716", category: "Fantasy", total_quantity: 2 },
+    // ── Supplement existing categories ──
+    { title: "The Selfish Gene", author: "Richard Dawkins", isbn: "9780199291151", category: "Science", total_quantity: 2 },
+    { title: "Cosmos", author: "Carl Sagan", isbn: "9780345539434", category: "Science", total_quantity: 2 },
+    { title: "Guns, Germs, and Steel", author: "Jared Diamond", isbn: "9780393317558", category: "History", total_quantity: 2 },
+    { title: "The Diary of a Young Girl", author: "Anne Frank", isbn: "9780553577129", category: "History", total_quantity: 2 },
+    { title: "Brave New World", author: "Aldous Huxley", isbn: "9780060850524", category: "Fiction", total_quantity: 2 },
+    { title: "The Lord of the Rings", author: "J.R.R. Tolkien", isbn: "9780544003415", category: "Fantasy", total_quantity: 2 },
+    // ── Education (supplement) ──
+    { title: "Thinking, Fast and Slow", author: "Daniel Kahneman", isbn: "9780374533557", category: "Education", total_quantity: 3 },
+    { title: "The Power of Habit", author: "Charles Duhigg", isbn: "9780812981605", category: "Education", total_quantity: 2 },
+    { title: "Make It Stick", author: "Peter C. Brown", isbn: "9780674729018", category: "Education", total_quantity: 2 },
+    { title: "Educated", author: "Tara Westover", isbn: "9780399590504", category: "Education", total_quantity: 3 },
+    // ── Literature (supplement) ──
+    { title: "One Hundred Years of Solitude", author: "Gabriel García Márquez", isbn: "9780060883287", category: "Literature", total_quantity: 3 },
+    { title: "The Brothers Karamazov", author: "Fyodor Dostoevsky", isbn: "9780374528379", category: "Literature", total_quantity: 2 },
+    { title: "Crime and Punishment", author: "Fyodor Dostoevsky", isbn: "9780486415871", category: "Literature", total_quantity: 2 },
+    { title: "Moby-Dick", author: "Herman Melville", isbn: "9780142437247", category: "Literature", total_quantity: 2 },
+    // ── Romance (supplement) ──
+    { title: "The Fault in Our Stars", author: "John Green", isbn: "9780142424179", category: "Romance", total_quantity: 3 },
+    { title: "Me Before You", author: "Jojo Moyes", isbn: "9780143124542", category: "Romance", total_quantity: 2 },
+    { title: "The Time Traveler's Wife", author: "Audrey Niffenegger", isbn: "9780965818679", category: "Romance", total_quantity: 2 },
+    { title: "Red, White & Royal Blue", author: "Casey McQuiston", isbn: "9781250316776", category: "Romance", total_quantity: 2 },
+    // ── Science (supplement) ──
+    { title: "The Gene", author: "Siddhartha Mukherjee", isbn: "9781476733524", category: "Science", total_quantity: 2 },
+    { title: "The Immortal Life of Henrietta Lacks", author: "Rebecca Skloot", isbn: "9781400052189", category: "Science", total_quantity: 3 },
+    { title: "Astrophysics for People in a Hurry", author: "Neil deGrasse Tyson", isbn: "9780393609394", category: "Science", total_quantity: 2 },
+    // ── Technology (supplement) ──
+    { title: "The Phoenix Project", author: "Gene Kim", isbn: "9780988262591", category: "Technology", total_quantity: 2 },
+    { title: "Clean Architecture", author: "Robert C. Martin", isbn: "9780134494166", category: "Technology", total_quantity: 2 },
+    { title: "Refactoring", author: "Martin Fowler", isbn: "9780134757599", category: "Technology", total_quantity: 2 },
+    { title: "Site Reliability Engineering", author: "Beyer et al.", isbn: "9781491929124", category: "Technology", total_quantity: 2 },
+    // ── Fantasy (supplement) ──
+    { title: "The Name of the Wind", author: "Patrick Rothfuss", isbn: "9780756404741", category: "Fantasy", total_quantity: 3 },
+    { title: "The Way of Kings", author: "Brandon Sanderson", isbn: "9780765326355", category: "Fantasy", total_quantity: 3 },
+    { title: "American Gods", author: "Neil Gaiman", isbn: "9780062567584", category: "Fantasy", total_quantity: 2 },
+    { title: "Assassin's Apprentice", author: "Robin Hobb", isbn: "9780553573398", category: "Fantasy", total_quantity: 2 },
+    // ── History (supplement) ──
+    { title: "The Silk Roads", author: "Peter Frankopan", isbn: "9781101946329", category: "History", total_quantity: 2 },
+    { title: "SPQR", author: "Mary Beard", isbn: "9781631492228", category: "History", total_quantity: 2 },
+    { title: "A People's History of the United States", author: "Howard Zinn", isbn: "9780062397348", category: "History", total_quantity: 2 },
+    { title: "The Wright Brothers", author: "David McCullough", isbn: "9781476728759", category: "History", total_quantity: 2 },
+    // ── Mystery / Thriller ──
+    { title: "The Girl with the Dragon Tattoo", author: "Stieg Larsson", isbn: "9780307454540", category: "Mystery / Thriller", total_quantity: 3 },
+    { title: "Gone Girl", author: "Gillian Flynn", isbn: "9780307588371", category: "Mystery / Thriller", total_quantity: 3 },
+    { title: "The Da Vinci Code", author: "Dan Brown", isbn: "9780307474278", category: "Mystery / Thriller", total_quantity: 3 },
+    { title: "The Silence of the Lambs", author: "Thomas Harris", isbn: "9780312924584", category: "Mystery / Thriller", total_quantity: 2 },
+    { title: "The Girl on the Train", author: "Paula Hawkins", isbn: "9781594634024", category: "Mystery / Thriller", total_quantity: 2 },
+    { title: "The Hound of the Baskervilles", author: "Arthur Conan Doyle", isbn: "9780140437867", category: "Mystery / Thriller", total_quantity: 2 },
+    // ── Self-development ──
+    { title: "Atomic Habits", author: "James Clear", isbn: "9780735211292", category: "Self-development", total_quantity: 4 },
+    { title: "The 7 Habits of Highly Effective People", author: "Stephen Covey", isbn: "9781982137274", category: "Self-development", total_quantity: 3 },
+    { title: "Think and Grow Rich", author: "Napoleon Hill", isbn: "9781585424337", category: "Self-development", total_quantity: 2 },
+    { title: "The Subtle Art of Not Giving a F*ck", author: "Mark Manson", isbn: "9780062457714", category: "Self-development", total_quantity: 3 },
+    { title: "Awaken the Giant Within", author: "Tony Robbins", isbn: "9780671791544", category: "Self-development", total_quantity: 2 },
+    { title: "Man's Search for Meaning", author: "Viktor Frankl", isbn: "9780807014295", category: "Self-development", total_quantity: 2 },
+    // ── Fiction (supplement) ──
+    { title: "The Alchemist", author: "Paulo Coelho", isbn: "9780062315007", category: "Fiction", total_quantity: 3 },
+    { title: "Fahrenheit 451", author: "Ray Bradbury", isbn: "9781451673319", category: "Fiction", total_quantity: 2 },
+    // ── Engineering (supplement) ──
+    { title: "The Design of Everyday Things", author: "Don Norman", isbn: "9780465050659", category: "Engineering", total_quantity: 2 },
+    // ── Computer Science (supplement) ──
+    { title: "The Clean Coder", author: "Robert C. Martin", isbn: "9780137081073", category: "Computer Science", total_quantity: 2 },
   ];
 
   for (const b of books) {
@@ -130,7 +225,7 @@ async function seedBorrowRecords() {
     return;
   }
 
-  const student = await prisma.user.findFirst({ where: { role: "student" } });
+  const student = await prisma.user.findFirst({ where: { role: "user" } });
   const books = await prisma.book.findMany();
 
   const now = new Date();

@@ -22,7 +22,7 @@ export async function createUser(data) {
       full_name: data.full_name,
       email: data.email,
       password_hash: passwordHash,
-      role: data.role || "student",
+      role: data.role || "user",
     },
     select: { id: true, full_name: true, email: true, role: true, is_active: true, created_at: true },
   });

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import api from "../services/api";
 import { formatCurrency, formatDate } from "../utils/format";
@@ -27,44 +28,71 @@ function PayModal({ fine, onClose, onPaid }) {
     : null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h3>Confirm Payment</h3>
-          <button className="icon-btn" onClick={onClose}><i className="ti ti-x"></i></button>
-        </div>
-        <div className="modal-body">
-          <div className="form-row">
-            <label className="form-label">Member</label>
-            <div style={{ fontWeight: 500 }}>{fine.user?.full_name}</div>
+    <AnimatePresence>
+      <motion.div className="modal-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
+        <motion.div
+          className="modal" onClick={(e) => e.stopPropagation()}
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        >
+          <div className="modal-header">
+            <h3>
+              <i className="ti ti-credit-card" style={{ marginRight: "8px", color: "var(--sf-green)" }}></i>
+              Confirm Payment
+            </h3>
+            <motion.button className="icon-btn" onClick={onClose} whileHover={{ rotate: 90 }} whileTap={{ scale: 0.9 }}><i className="ti ti-x"></i></motion.button>
           </div>
-          <div className="form-row">
-            <label className="form-label">Book</label>
-            <div>{bookTitle}</div>
-          </div>
-          {daysOverdue && (
+          <div className="modal-body">
             <div className="form-row">
-              <label className="form-label">Overdue</label>
-              <div>{daysOverdue} days</div>
+              <label className="form-label">Member</label>
+              <div style={{ fontWeight: 500 }}>{fine.user?.full_name}</div>
             </div>
-          )}
-          <div className="form-row">
-            <label className="form-label">Fine Amount</label>
-            <div style={{ fontSize: "18px", fontWeight: 600, color: "var(--sf-red)" }}>{formatCurrency(fine.amount)}</div>
+            <div className="form-row">
+              <label className="form-label">Book</label>
+              <div>{bookTitle}</div>
+            </div>
+            {daysOverdue && (
+              <div className="form-row">
+                <label className="form-label">Overdue</label>
+                <div>{daysOverdue} days</div>
+              </div>
+            )}
+            <div className="form-row">
+              <label className="form-label">Fine Amount</label>
+              <div style={{ fontSize: "18px", fontWeight: 700, color: "var(--sf-red)" }}>{formatCurrency(fine.amount)}</div>
+            </div>
+            <div style={{ marginTop: "12px", padding: "10px 14px", background: "var(--sf-bg-2)", borderRadius: "8px", fontSize: "13px", color: "var(--sf-text-2)" }}>
+              <i className="ti ti-info-circle" style={{ marginRight: "6px" }}></i>
+              This will record the payment with a timestamp and mark the fine as paid.
+            </div>
           </div>
-          <div style={{ marginTop: "12px", padding: "10px 14px", background: "var(--sf-bg-2)", borderRadius: "8px", fontSize: "13px", color: "var(--sf-text-2)" }}>
-            <i className="ti ti-info-circle" style={{ marginRight: "6px" }}></i>
-            This will record the payment with a timestamp and mark the fine as paid.
+          <div className="modal-footer">
+            <motion.button className="btn btn-ghost" onClick={onClose} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>Cancel</motion.button>
+            <motion.button className="btn btn-primary" onClick={handleConfirm} disabled={submitting} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
+              {submitting ? "Processing…" : `Pay ${formatCurrency(fine.amount)}`}
+            </motion.button>
           </div>
-        </div>
-        <div className="modal-footer">
-          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" onClick={handleConfirm} disabled={submitting}>
-            {submitting ? "Processing…" : `Pay ${formatCurrency(fine.amount)}`}
-          </button>
-        </div>
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+function StatCard({ label, value, sub, delay = 0, color }) {
+  return (
+    <motion.div
+      className="stat-card"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay }}
+      whileHover={{ y: -4 }}
+    >
+      <div className="stat-label">{label}</div>
+      <div className="stat-val" style={color ? { color } : undefined}>{value}</div>
+      {sub && <div className="stat-sub">{sub}</div>}
+    </motion.div>
   );
 }
 
@@ -110,35 +138,17 @@ export default function BillingPage() {
   const handlePaid = () => fetchData(page, paidFilter);
 
   return (
-    <div>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
       <div className="section-header">
         <span className="section-title">Billing & Revenue</span>
       </div>
 
       {revenue && (
         <div className="stat-grid" style={{ marginBottom: "16px" }}>
-          <div className="stat-card">
-            <div className="stat-label">Total Revenue</div>
-            <div className="stat-val">{formatCurrency(revenue.totalRevenue)}</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-label">Collected</div>
-            <div className="stat-val" style={{ color: "var(--sf-green)" }}>{formatCurrency(revenue.paidRevenue)}</div>
-            <div className="stat-sub">{revenue.paidCount} paid fines</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-label">Outstanding</div>
-            <div className="stat-val" style={{ color: "var(--sf-red)" }}>{formatCurrency(revenue.unpaidRevenue)}</div>
-            <div className="stat-sub">{revenue.unpaidCount} unpaid fines</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-label">Collection Rate</div>
-            <div className="stat-val">
-              {revenue.totalRevenue > 0
-                ? `${Math.round((revenue.paidRevenue / revenue.totalRevenue) * 100)}%`
-                : "—"}
-            </div>
-          </div>
+          <StatCard label="Total Revenue" value={formatCurrency(revenue.totalRevenue)} delay={0} />
+          <StatCard label="Collected" value={formatCurrency(revenue.paidRevenue)} sub={`${revenue.paidCount} paid fines`} delay={0.05} color="var(--sf-green)" />
+          <StatCard label="Outstanding" value={formatCurrency(revenue.unpaidRevenue)} sub={`${revenue.unpaidCount} unpaid fines`} delay={0.1} color="var(--sf-red)" />
+          <StatCard label="Collection Rate" value={revenue.totalRevenue > 0 ? `${Math.round((revenue.paidRevenue / revenue.totalRevenue) * 100)}%` : "—"} delay={0.15} />
         </div>
       )}
 
@@ -153,11 +163,17 @@ export default function BillingPage() {
       </div>
 
       {loading ? (
-        <div className="card" style={{ padding: "48px", textAlign: "center", color: "var(--sf-text-2)" }}>Loading…</div>
+        <div className="card" style={{ padding: "48px", textAlign: "center" }}>
+          <div className="skeleton" style={{ height: 20, width: "30%", margin: "0 auto" }}></div>
+        </div>
       ) : fines.length === 0 ? (
-        <div className="card" style={{ padding: "48px", textAlign: "center", color: "var(--sf-text-2)" }}>No fines found.</div>
+        <motion.div className="card" style={{ padding: "48px", textAlign: "center", color: "var(--sf-text-2)" }}
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <i className="ti ti-coin" style={{ fontSize: "40px", display: "block", marginBottom: "12px" }}></i>
+          No fines found.
+        </motion.div>
       ) : (
-        <div className="card">
+        <motion.div className="card" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
           <table>
             <thead>
               <tr>
@@ -179,6 +195,7 @@ export default function BillingPage() {
                     <td>{formatCurrency(f.amount)}</td>
                     <td>
                       <span className={`badge ${f.is_paid ? "badge-green" : "badge-red"}`}>
+                        <i className={`ti ti-${f.is_paid ? "check-circle" : "alert-circle"}`} style={{ fontSize: "10px" }}></i>
                         {f.is_paid ? "PAID" : "UNPAID"}
                       </span>
                     </td>
@@ -187,9 +204,9 @@ export default function BillingPage() {
                     </td>
                     <td>
                       {!f.is_paid ? (
-                        <button className="btn btn-ghost btn-sm" onClick={() => setPayingFine(f)}>
+                        <motion.button className="btn btn-ghost btn-sm" onClick={() => setPayingFine(f)} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
                           <i className="ti ti-credit-card" style={{ marginRight: "4px" }}></i>Collect
-                        </button>
+                        </motion.button>
                       ) : (
                         <span style={{ fontSize: "12px", color: "var(--sf-text-2)" }}>
                           <i className="ti ti-check" style={{ marginRight: "2px" }}></i>Paid
@@ -201,7 +218,7 @@ export default function BillingPage() {
               })}
             </tbody>
           </table>
-        </div>
+        </motion.div>
       )}
 
       <Pagination page={pagination.page || page} pages={pagination.pages} total={pagination.total} onPageChange={handlePageChange} />
@@ -209,6 +226,6 @@ export default function BillingPage() {
       {payingFine && (
         <PayModal fine={payingFine} onClose={() => setPayingFine(null)} onPaid={handlePaid} />
       )}
-    </div>
+    </motion.div>
   );
 }

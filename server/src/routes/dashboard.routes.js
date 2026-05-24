@@ -5,7 +5,7 @@ import { roleGuard } from "../middlewares/roleGuard.js";
 
 const router = Router();
 
-router.get("/summary", authMiddleware, roleGuard("admin", "librarian"), dashboardController.summary);
-router.get("/my", authMiddleware, roleGuard("student"), dashboardController.mySummary);
+router.get("/summary", authMiddleware, roleGuard("librarian"), dashboardController.summary);
+router.get("/my", authMiddleware, roleGuard("user"), dashboardController.mySummary);
 
 export default router;

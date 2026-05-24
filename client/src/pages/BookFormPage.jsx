@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import api from "../services/api";
 
@@ -50,14 +51,18 @@ export default function BookFormPage() {
   };
 
   return (
-    <div style={{ display: "flex", justifyContent: "center" }}>
+    <motion.div style={{ display: "flex", justifyContent: "center" }} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
       <div className="form-card">
-        <h1 style={{ fontSize: "22px", fontWeight: 500, letterSpacing: "-0.5px", marginBottom: "20px" }}>
+        <h1 style={{ fontSize: "22px", fontWeight: 600, letterSpacing: "-0.5px", marginBottom: "20px" }}>
           {isEdit ? "Edit Book" : "Add Book"}
         </h1>
         <form onSubmit={handleSubmit}>
           {error && (
-            <div style={{ background: "#FFF0EF", color: "#991B1B", fontSize: "13px", padding: "10px 14px", borderRadius: "8px", marginBottom: "16px" }}>{error}</div>
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              style={{ background: "var(--sf-red-bg)", color: "var(--sf-red)", fontSize: "13px", padding: "10px 14px", borderRadius: "8px", marginBottom: "16px" }}
+            >{error}</motion.div>
           )}
           {["title", "author", "isbn", "category"].map((field) => (
             <div className="form-row" key={field}>
@@ -83,11 +88,18 @@ export default function BookFormPage() {
               required
             />
           </div>
-          <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: "100%", justifyContent: "center", padding: "10px", fontSize: "14px", borderRadius: "10px", marginTop: "4px" }}>
+          <motion.button
+            type="submit"
+            disabled={loading}
+            className="btn btn-primary"
+            style={{ width: "100%", justifyContent: "center", padding: "10px", fontSize: "14px", borderRadius: "10px", marginTop: "4px" }}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.98 }}
+          >
             {loading ? "Saving…" : isEdit ? "Update Book" : "Add Book"}
-          </button>
+          </motion.button>
         </form>
       </div>
-    </div>
+    </motion.div>
   );
 }

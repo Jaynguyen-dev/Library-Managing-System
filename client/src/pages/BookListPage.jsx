@@ -23,6 +23,12 @@ function SkeletonGrid() {
   );
 }
 
+const CATEGORIES = [
+  "All", "Fiction", "Literature", "Fantasy", "Romance",
+  "Mystery / Thriller", "Science", "Technology", "Computer Science", "Engineering",
+  "Education", "History", "Self-development",
+];
+
 export default function BookListPage() {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,18 +37,21 @@ export default function BookListPage() {
   const [tab, setTab] = useState("all");
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [category, setCategory] = useState("All");
   const [borrowingBook, setBorrowingBook] = useState(null);
   const [reservingBook, setReservingBook] = useState(null);
   const [userReservations, setUserReservations] = useState({});
   const { user } = useAuth();
-  const isStaff = user?.role === "admin" || user?.role === "librarian";
+  const isStaff = user?.role === "librarian";
 
-  const fetchBooks = (queryTab, queryPage, querySearch) => {
+  const fetchBooks = (queryTab, queryPage, querySearch, queryCategory) => {
     const params = { page: queryPage || 1, limit: 20 };
     const effectiveTab = queryTab || tab;
     if (effectiveTab === "available") params.available = "true";
     if (effectiveTab === "borrowed") params.available = "false";
     if (querySearch) params.search = querySearch;
+    const effectiveCategory = queryCategory || category;
+    if (effectiveCategory && effectiveCategory !== "All") params.category = effectiveCategory;
     api.get("/api/books", { params })
       .then(({ data }) => {
         setBooks(data.data.books);
@@ -53,12 +62,12 @@ export default function BookListPage() {
   };
 
   useEffect(() => {
-    fetchBooks(tab, 1, search);
+    fetchBooks(tab, 1, search, category);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, search]);
+  }, [tab, search, category]);
 
   useEffect(() => {
-    if (user?.role === "student") {
+    if (user?.role === "user") {
       api.get("/api/reservations/my")
         .then(({ data }) => {
           const map = {};
@@ -73,6 +82,7 @@ export default function BookListPage() {
 
   const handleTabChange = (newTab) => {
     setTab(newTab);
+    setCategory("All");
     setPage(1);
   };
 
@@ -89,6 +99,7 @@ export default function BookListPage() {
     if (tab === "available") params.available = "true";
     if (tab === "borrowed") params.available = "false";
     if (search) params.search = search;
+    if (category && category !== "All") params.category = category;
     api.get("/api/books", { params })
       .then(({ data }) => {
         setBooks(data.data.books);
@@ -147,8 +158,8 @@ export default function BookListPage() {
         )}
       </div>
 
-      <form onSubmit={handleSearch} style={{ marginBottom: "16px" }}>
-        <div className="search-wrap" style={{ maxWidth: "400px" }}>
+      <form onSubmit={handleSearch} style={{ marginBottom: "12px" }}>
+        <div className="search-wrap" style={{ maxWidth: "420px" }}>
           <i className="ti ti-search" aria-hidden="true"></i>
           <input
             type="text"
@@ -158,6 +169,39 @@ export default function BookListPage() {
           />
         </div>
       </form>
+
+      {/* ── Category Chips ── */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 12 }}>
+        {CATEGORIES.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => { setCategory(cat); setPage(1); }}
+            style={{
+              padding: "4px 12px",
+              fontSize: 11,
+              fontWeight: category === cat ? 700 : 500,
+              borderRadius: 20,
+              border: category === cat ? "1.5px solid var(--sf-accent)" : "1px solid var(--sf-border)",
+              background: category === cat ? "var(--sf-accent-light)" : "transparent",
+              color: category === cat ? "var(--sf-accent)" : "var(--sf-text-2)",
+              cursor: "pointer",
+              transition: "all 0.15s",
+              whiteSpace: "nowrap",
+              letterSpacing: "0.01em",
+            }}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Result Count ── */}
+      {!loading && books.length > 0 && (
+        <div style={{ fontSize: 11, color: "var(--sf-text-2)", marginBottom: 8 }}>
+          Showing {books.length} of {pagination.total} book{pagination.total !== 1 ? "s" : ""}
+          {pagination.pages > 1 && ` · Page ${pagination.page || page} of ${pagination.pages}`}
+        </div>
+      )}
 
       {loading ? (
         <SkeletonGrid />

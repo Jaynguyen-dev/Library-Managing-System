@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import api from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
@@ -12,25 +13,25 @@ function getInitials(name) {
 }
 
 function avatarClass(role) {
-  if (role === "admin") return "";
-  if (role === "student") return "green";
+  if (role === "librarian") return "";
+  if (role === "user") return "green";
   return "blue";
 }
 
 function roleBadge(role) {
-  const cls = role === "admin" ? "badge-blue" : role === "librarian" ? "badge-gray" : "badge-green";
-  return <span className={`badge ${cls}`}>{role}</span>;
+  const cls = role === "librarian" ? "badge-gray" : "badge-green";
+  return <span className={`badge ${cls}`}><i className="ti ti-shield" style={{ fontSize: "10px" }}></i>{role}</span>;
 }
 
 function statusBadge(active) {
   return active
-    ? <span className="badge badge-green">Active</span>
-    : <span className="badge badge-red">Locked</span>;
+    ? <span className="badge badge-green"><i className="ti ti-check" style={{ fontSize: "10px" }}></i>Active</span>
+    : <span className="badge badge-red"><i className="ti ti-x" style={{ fontSize: "10px" }}></i>Locked</span>;
 }
 
 export default function UserListPage() {
   const { user } = useAuth();
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role === "librarian";
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [roleFilter, setRoleFilter] = useState("");
@@ -88,12 +89,12 @@ export default function UserListPage() {
   };
 
   return (
-    <div>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
       <div className="section-header">
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <span className="section-title">Members</span>
           <div className="tab-bar">
-            {["", "admin", "librarian", "student"].map((r) => (
+            {["", "librarian", "user"].map((r) => (
               <button
                 key={r}
                 className={`tab${roleFilter === r ? " active" : ""}`}
@@ -110,11 +111,18 @@ export default function UserListPage() {
       </div>
 
       {loading ? (
-        <div className="card" style={{ padding: "48px", textAlign: "center", color: "var(--sf-text-2)" }}>Loading…</div>
+        <div className="card" style={{ padding: "48px", textAlign: "center" }}>
+          <div className="skeleton" style={{ width: 40, height: 40, borderRadius: "50%", margin: "0 auto 12px" }}></div>
+          <div className="skeleton skeleton-text w-50" style={{ margin: "0 auto" }}></div>
+        </div>
       ) : users.length === 0 ? (
-        <div className="card" style={{ padding: "48px", textAlign: "center", color: "var(--sf-text-2)" }}>No users found.</div>
+        <motion.div className="card" style={{ padding: "48px", textAlign: "center", color: "var(--sf-text-2)" }}
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <i className="ti ti-users" style={{ fontSize: "40px", display: "block", marginBottom: "12px", color: "var(--sf-text-2)" }}></i>
+          <div>No users found.</div>
+        </motion.div>
       ) : (
-        <div className="card">
+        <motion.div className="card" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
           <table>
             <thead>
               <tr>
@@ -141,19 +149,19 @@ export default function UserListPage() {
                   <td style={{ color: "var(--sf-text-2)" }}>{formatDate(u.created_at)}</td>
                   <td>
                     {isAdmin && (
-                      <button className="icon-btn" title={u.is_active ? "Lock" : "Unlock"} onClick={() => handleToggleActive(u.id)}>
+                      <motion.button className="icon-btn" title={u.is_active ? "Lock" : "Unlock"} onClick={() => handleToggleActive(u.id)} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                         <i className={`ti ti-${u.is_active ? "lock" : "lock-open"}`}></i>
-                      </button>
+                      </motion.button>
                     )}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
+        </motion.div>
       )}
 
       <Pagination page={pagination.page || page} pages={pagination.pages} total={pagination.total} onPageChange={handlePageChange} />
-    </div>
+    </motion.div>
   );
 }

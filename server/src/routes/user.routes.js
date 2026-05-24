@@ -6,9 +6,9 @@ import { createUserValidation, updateUserValidation } from "../validators/userVa
 
 const router = Router();
 
-router.get("/", authMiddleware, roleGuard("admin", "librarian"), userController.list);
-router.post("/", authMiddleware, roleGuard("admin"), createUserValidation, userController.create);
-router.put("/:id", authMiddleware, roleGuard("admin"), updateUserValidation, userController.update);
-router.patch("/:id/toggle-active", authMiddleware, roleGuard("admin"), userController.toggleActive);
+router.get("/", authMiddleware, roleGuard("librarian"), userController.list);
+router.post("/", authMiddleware, roleGuard("librarian"), createUserValidation, userController.create);
+router.put("/:id", authMiddleware, roleGuard("librarian"), updateUserValidation, userController.update);
+router.patch("/:id/toggle-active", authMiddleware, roleGuard("librarian"), userController.toggleActive);
 
 export default router;

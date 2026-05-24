@@ -1,5 +1,6 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+import { AnimatePresence, motion } from "framer-motion";
 import { AuthProvider } from "./contexts/AuthContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -21,45 +22,91 @@ import WalletPage from "./pages/WalletPage";
 import StudentHistoryPage from "./pages/StudentHistoryPage";
 import MyReservationsPage from "./pages/MyReservationsPage";
 
+function AnimatedOutlet({ children }) {
+  const location = useLocation();
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={location.pathname}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.2, ease: "easeInOut" }}
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+function ToastContent() {
+  const location = useLocation();
+  return (
+    <Toaster
+      position="top-right"
+      gutter={12}
+      containerStyle={{ margin: "8px" }}
+      toastOptions={{
+        duration: 4000,
+        style: {
+          borderRadius: "14px",
+          padding: "12px 20px",
+          fontSize: "14px",
+          fontWeight: 500,
+          boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+          border: "1px solid rgba(0,0,0,0.04)",
+        },
+        success: { iconTheme: { primary: "#059669", secondary: "#fff" } },
+        error: { iconTheme: { primary: "#DC2626", secondary: "#fff" } },
+      }}
+    />
+  );
+}
+
+function AppRoutes() {
+  const location = useLocation();
+
+  return (
+    <Routes location={location}>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route
+        element={
+          <ProtectedRoute roles={["librarian", "user"]}>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/dashboard" element={<ProtectedRoute roles={["librarian"]}><AnimatedOutlet><Dashboard /></AnimatedOutlet></ProtectedRoute>} />
+        <Route path="/my-dashboard" element={<ProtectedRoute roles={["user"]}><AnimatedOutlet><ReaderDashboard /></AnimatedOutlet></ProtectedRoute>} />
+        <Route path="/books" element={<AnimatedOutlet><BookListPage /></AnimatedOutlet>} />
+        <Route path="/books/new" element={<ProtectedRoute roles={["librarian"]}><AnimatedOutlet><BookFormPage /></AnimatedOutlet></ProtectedRoute>} />
+        <Route path="/books/:id/edit" element={<ProtectedRoute roles={["librarian"]}><AnimatedOutlet><BookFormPage /></AnimatedOutlet></ProtectedRoute>} />
+        <Route path="/users" element={<ProtectedRoute roles={["librarian"]}><AnimatedOutlet><UserListPage /></AnimatedOutlet></ProtectedRoute>} />
+        <Route path="/users/new" element={<ProtectedRoute roles={["librarian"]}><AnimatedOutlet><UserFormPage /></AnimatedOutlet></ProtectedRoute>} />
+        <Route path="/borrows" element={<ProtectedRoute roles={["librarian"]}><AnimatedOutlet><BorrowListPage /></AnimatedOutlet></ProtectedRoute>} />
+        <Route path="/borrows/new" element={<ProtectedRoute roles={["librarian"]}><AnimatedOutlet><BorrowFormPage /></AnimatedOutlet></ProtectedRoute>} />
+        <Route path="/borrows/:id/return" element={<ProtectedRoute roles={["librarian"]}><AnimatedOutlet><ReturnPage /></AnimatedOutlet></ProtectedRoute>} />
+        <Route path="/fines" element={<ProtectedRoute roles={["librarian"]}><AnimatedOutlet><FineListPage /></AnimatedOutlet></ProtectedRoute>} />
+        <Route path="/billing" element={<ProtectedRoute roles={["librarian"]}><AnimatedOutlet><BillingPage /></AnimatedOutlet></ProtectedRoute>} />
+        <Route path="/fines/my" element={<ProtectedRoute roles={["user"]}><AnimatedOutlet><FineListPage /></AnimatedOutlet></ProtectedRoute>} />
+        <Route path="/wallet" element={<ProtectedRoute roles={["user"]}><AnimatedOutlet><WalletPage /></AnimatedOutlet></ProtectedRoute>} />
+        <Route path="/profile/history" element={<ProtectedRoute roles={["user"]}><AnimatedOutlet><StudentHistoryPage /></AnimatedOutlet></ProtectedRoute>} />
+        <Route path="/reservations" element={<ProtectedRoute roles={["user"]}><AnimatedOutlet><MyReservationsPage /></AnimatedOutlet></ProtectedRoute>} />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      </Route>
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
         <ErrorBoundary>
-          <Toaster position="top-right" toastOptions={{
-            duration: 4000,
-            style: { borderRadius: "9999px", padding: "12px 20px", fontSize: "15px" },
-          }} />
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route
-              element={
-                <ProtectedRoute roles={["admin", "librarian", "student"]}>
-                  <MainLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route path="/dashboard" element={<ProtectedRoute roles={["admin", "librarian"]}><Dashboard /></ProtectedRoute>} />
-              <Route path="/my-dashboard" element={<ProtectedRoute roles={["student"]}><ReaderDashboard /></ProtectedRoute>} />
-              <Route path="/books" element={<BookListPage />} />
-              <Route path="/books/new" element={<ProtectedRoute roles={["admin", "librarian"]}><BookFormPage /></ProtectedRoute>} />
-              <Route path="/books/:id/edit" element={<ProtectedRoute roles={["admin", "librarian"]}><BookFormPage /></ProtectedRoute>} />
-              <Route path="/users" element={<ProtectedRoute roles={["admin"]}><UserListPage /></ProtectedRoute>} />
-              <Route path="/users/new" element={<ProtectedRoute roles={["admin"]}><UserFormPage /></ProtectedRoute>} />
-              <Route path="/borrows" element={<ProtectedRoute roles={["admin", "librarian"]}><BorrowListPage /></ProtectedRoute>} />
-              <Route path="/borrows/new" element={<ProtectedRoute roles={["admin", "librarian"]}><BorrowFormPage /></ProtectedRoute>} />
-              <Route path="/borrows/:id/return" element={<ProtectedRoute roles={["admin", "librarian"]}><ReturnPage /></ProtectedRoute>} />
-              <Route path="/fines" element={<ProtectedRoute roles={["admin", "librarian"]}><FineListPage /></ProtectedRoute>} />
-              <Route path="/billing" element={<ProtectedRoute roles={["admin"]}><BillingPage /></ProtectedRoute>} />
-              <Route path="/fines/my" element={<ProtectedRoute roles={["student"]}><FineListPage /></ProtectedRoute>} />
-              <Route path="/wallet" element={<ProtectedRoute roles={["student"]}><WalletPage /></ProtectedRoute>} />
-              <Route path="/profile/history" element={<ProtectedRoute roles={["student"]}><StudentHistoryPage /></ProtectedRoute>} />
-              <Route path="/reservations" element={<ProtectedRoute roles={["student"]}><MyReservationsPage /></ProtectedRoute>} />
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            </Route>
-            <Route path="*" element={<Navigate to="/login" replace />} />
-          </Routes>
+          <ToastContent />
+          <AppRoutes />
         </ErrorBoundary>
       </AuthProvider>
     </BrowserRouter>

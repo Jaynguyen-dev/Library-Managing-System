@@ -5,10 +5,10 @@ import { roleGuard } from "../middlewares/roleGuard.js";
 
 const router = Router();
 
-router.get("/my", authMiddleware, roleGuard("student"), fineController.listMy);
-router.get("/revenue", authMiddleware, roleGuard("admin"), fineController.revenue);
-router.get("/", authMiddleware, roleGuard("admin", "librarian"), fineController.list);
-router.patch("/:id/pay", authMiddleware, roleGuard("admin"), fineController.pay);
-router.patch("/:id/self-pay", authMiddleware, roleGuard("student"), fineController.selfPay);
+router.get("/my", authMiddleware, roleGuard("user"), fineController.listMy);
+router.get("/revenue", authMiddleware, roleGuard("librarian"), fineController.revenue);
+router.get("/", authMiddleware, roleGuard("librarian"), fineController.list);
+router.patch("/:id/pay", authMiddleware, roleGuard("librarian"), fineController.pay);
+router.patch("/:id/self-pay", authMiddleware, roleGuard("user"), fineController.selfPay);
 
 export default router;

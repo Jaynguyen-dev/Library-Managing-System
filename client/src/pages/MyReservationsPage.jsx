@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import api from "../services/api";
 import { formatDate } from "../utils/format";
@@ -38,7 +39,7 @@ function ExpirationCountdown({ expiresAt }) {
   }, [expiresAt]);
 
   if (!display) return null;
-  return <span style={{ fontSize: "12px", color: "var(--sf-red)", fontWeight: 500 }}>{display} left</span>;
+  return <span style={{ fontSize: "12px", color: "var(--sf-red)", fontWeight: 600 }}>{display} left</span>;
 }
 
 export default function MyReservationsPage() {
@@ -75,26 +76,28 @@ export default function MyReservationsPage() {
   const pastReservations = reservations.filter((r) => ["expired", "completed", "cancelled"].includes(r.status));
 
   return (
-    <div>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
       <div className="section-header">
         <span className="section-title">My Reservations</span>
       </div>
 
       {loading ? (
-        <div className="card" style={{ padding: "48px", textAlign: "center", color: "var(--sf-text-2)" }}>Loading…</div>
-      ) : reservations.length === 0 ? (
-        <div className="card" style={{ padding: "48px", textAlign: "center", color: "var(--sf-text-2)" }}>
-          No reservations yet.
-          <div style={{ marginTop: "12px" }}>
-            <Link to="/books" className="btn btn-primary">
-              <i className="ti ti-books"></i> Browse Books
-            </Link>
-          </div>
+        <div className="card" style={{ padding: "48px", textAlign: "center" }}>
+          <div className="skeleton" style={{ height: 20, width: "30%", margin: "0 auto" }}></div>
         </div>
+      ) : reservations.length === 0 ? (
+        <motion.div className="card" style={{ padding: "48px", textAlign: "center", color: "var(--sf-text-2)" }}
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <i className="ti ti-clock" style={{ fontSize: "40px", display: "block", marginBottom: "12px", color: "var(--sf-text-2)" }}></i>
+          <div style={{ marginBottom: "12px" }}>No reservations yet.</div>
+          <Link to="/books" className="btn btn-primary">
+            <i className="ti ti-books"></i> Browse Books
+          </Link>
+        </motion.div>
       ) : (
-        <>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           {activeReservations.length > 0 && (
-            <div style={{ marginBottom: "24px" }}>
+            <motion.div style={{ marginBottom: "24px" }} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
               <h3 style={{ fontSize: "14px", fontWeight: 600, marginBottom: "10px", color: "var(--sf-text-2)" }}>
                 Active Reservations ({activeReservations.length})
               </h3>
@@ -140,9 +143,9 @@ export default function MyReservationsPage() {
                         </td>
                         <td>
                           {["waiting", "notified"].includes(r.status) && (
-                            <button className="btn btn-ghost btn-sm" onClick={() => handleCancel(r.id)}>
-                              Cancel
-                            </button>
+                            <motion.button className="btn btn-ghost btn-sm" onClick={() => handleCancel(r.id)} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
+                              <i className="ti ti-x" style={{ marginRight: "2px" }}></i>Cancel
+                            </motion.button>
                           )}
                         </td>
                       </tr>
@@ -150,11 +153,11 @@ export default function MyReservationsPage() {
                   </tbody>
                 </table>
               </div>
-            </div>
+            </motion.div>
           )}
 
           {pastReservations.length > 0 && (
-            <div>
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
               <h3 style={{ fontSize: "14px", fontWeight: 600, marginBottom: "10px", color: "var(--sf-text-2)" }}>
                 History ({pastReservations.length})
               </h3>
@@ -182,10 +185,10 @@ export default function MyReservationsPage() {
                   </tbody>
                 </table>
               </div>
-            </div>
+            </motion.div>
           )}
-        </>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 }

@@ -3,7 +3,7 @@ import { paginate } from "../utils/paginate.js";
 
 const OPEN_LIB_COVERS = "https://covers.openlibrary.org/b/isbn";
 
-export async function listBooks(search, page, limit, available) {
+export async function listBooks(search, page, limit, available, category) {
   const where = { is_deleted: false };
   if (search) {
     where.OR = [
@@ -16,6 +16,9 @@ export async function listBooks(search, page, limit, available) {
     where.available_quantity = { gt: 0 };
   } else if (available === "false") {
     where.available_quantity = 0;
+  }
+  if (category) {
+    where.category = category;
   }
   return paginate(prisma.book, {
     where,

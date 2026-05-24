@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import api from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -17,8 +18,10 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const { data } = await api.post("/api/auth/login", { email, password });
-      login(data.data.token, data.data.user);
-      const target = data.data.user.role === "student" ? "/my-dashboard" : "/dashboard";
+      const userData = data.data?.user;
+      if (!userData) { setError("Invalid response from server"); setLoading(false); return; }
+      login(data.data.token, userData);
+      const target = userData.role === "user" ? "/my-dashboard" : "/dashboard";
       navigate(target);
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
@@ -28,26 +31,45 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="login-wrap">
-      <div className="login-card">
-        <div className="login-logo">
+    <motion.div
+      className="login-wrap"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      <motion.div
+        className="login-card"
+        initial={{ opacity: 0, y: 30, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
+        <motion.div
+          className="login-logo"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.1 }}
+        >
           <i className="ti ti-book-2" aria-hidden="true"></i>
-        </div>
+        </motion.div>
         <div className="login-title">Welcome back</div>
         <div className="login-sub">Sign in to LibraryLMS</div>
         <form onSubmit={handleSubmit}>
           {error && (
-            <div style={{
-              background: "#FFF0EF", color: "#991B1B", fontSize: "13px",
-              padding: "10px 14px", borderRadius: "8px", marginBottom: "16px", textAlign: "left"
-            }}>{error}</div>
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              style={{
+                background: "var(--sf-red-bg)", color: "var(--sf-red)", fontSize: "13px",
+                padding: "10px 14px", borderRadius: "8px", marginBottom: "16px", textAlign: "left"
+              }}
+            >{error}</motion.div>
           )}
           <div className="form-row" style={{ textAlign: "left" }}>
             <label className="form-label">Email address</label>
             <input
               className="form-input"
               type="email"
-              placeholder="you@student.edu.vn"
+              placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -64,20 +86,22 @@ export default function LoginPage() {
               required
             />
           </div>
-          <button
+          <motion.button
             type="submit"
             disabled={loading}
             className="btn btn-primary"
             style={{ width: "100%", justifyContent: "center", padding: "10px", fontSize: "14px", borderRadius: "10px", marginTop: "4px" }}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.98 }}
           >
             {loading ? "Signing in…" : "Sign in"}
-          </button>
+          </motion.button>
         </form>
         <p style={{ fontSize: "12px", color: "var(--sf-text-2)", marginTop: "16px" }}>
           Don't have an account?{" "}
-          <Link to="/register" style={{ color: "var(--sf-accent)", textDecoration: "none" }}>Register</Link>
+          <Link to="/register" style={{ color: "var(--sf-accent)", textDecoration: "none", fontWeight: 500 }}>Register</Link>
         </p>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import api from "../services/api";
 
@@ -28,19 +29,38 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="login-wrap">
-      <div className="login-card">
-        <div className="login-logo">
+    <motion.div
+      className="login-wrap"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      <motion.div
+        className="login-card"
+        initial={{ opacity: 0, y: 30, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
+        <motion.div
+          className="login-logo"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.1 }}
+        >
           <i className="ti ti-user-plus" aria-hidden="true"></i>
-        </div>
+        </motion.div>
         <div className="login-title">Create Account</div>
-        <div className="login-sub">Register as a student</div>
+        <div className="login-sub">Create a new account</div>
         <form onSubmit={handleSubmit}>
           {error && (
-            <div style={{
-              background: "#FFF0EF", color: "#991B1B", fontSize: "13px",
-              padding: "10px 14px", borderRadius: "8px", marginBottom: "16px", textAlign: "left"
-            }}>{error}</div>
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              style={{
+                background: "var(--sf-red-bg)", color: "var(--sf-red)", fontSize: "13px",
+                padding: "10px 14px", borderRadius: "8px", marginBottom: "16px", textAlign: "left"
+              }}
+            >{error}</motion.div>
           )}
           <div className="form-row" style={{ textAlign: "left" }}>
             <label className="form-label">Full Name</label>
@@ -48,21 +68,28 @@ export default function RegisterPage() {
           </div>
           <div className="form-row" style={{ textAlign: "left" }}>
             <label className="form-label">Email address</label>
-            <input className="form-input" type="email" name="email" value={form.email} onChange={handleChange} placeholder="you@student.edu.vn" required />
+            <input className="form-input" type="email" name="email" value={form.email} onChange={handleChange} placeholder="you@example.com" required />
           </div>
           <div className="form-row" style={{ textAlign: "left" }}>
             <label className="form-label">Password</label>
             <input className="form-input" type="password" name="password" value={form.password} onChange={handleChange} placeholder="At least 6 characters" required />
           </div>
-          <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: "100%", justifyContent: "center", padding: "10px", fontSize: "14px", borderRadius: "10px", marginTop: "4px" }}>
+          <motion.button
+            type="submit"
+            disabled={loading}
+            className="btn btn-primary"
+            style={{ width: "100%", justifyContent: "center", padding: "10px", fontSize: "14px", borderRadius: "10px", marginTop: "4px" }}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.98 }}
+          >
             {loading ? "Registering…" : "Register"}
-          </button>
+          </motion.button>
         </form>
         <p style={{ fontSize: "12px", color: "var(--sf-text-2)", marginTop: "16px" }}>
           Already have an account?{" "}
-          <Link to="/login" style={{ color: "var(--sf-accent)", textDecoration: "none" }}>Sign In</Link>
+          <Link to="/login" style={{ color: "var(--sf-accent)", textDecoration: "none", fontWeight: 500 }}>Sign In</Link>
         </p>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

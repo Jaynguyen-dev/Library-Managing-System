@@ -5,8 +5,8 @@ import { roleGuard } from "../middlewares/roleGuard.js";
 
 const router = Router();
 
-router.get("/", authMiddleware, roleGuard("student"), walletController.get);
-router.post("/add", authMiddleware, roleGuard("student"), walletController.addCredits);
-router.get("/transactions", authMiddleware, roleGuard("student"), walletController.transactions);
+router.get("/", authMiddleware, roleGuard("user"), walletController.get);
+router.post("/add", authMiddleware, roleGuard("user"), walletController.addCredits);
+router.get("/transactions", authMiddleware, roleGuard("user"), walletController.transactions);
 
 export default router;

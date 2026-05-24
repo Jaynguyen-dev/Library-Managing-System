@@ -5,9 +5,9 @@ import { roleGuard } from "../middlewares/roleGuard.js";
 
 const router = Router();
 
-router.post("/isbn/:isbn", authMiddleware, roleGuard("admin"), crawlController.enrichByIsbn);
-router.post("/batch", authMiddleware, roleGuard("admin"), crawlController.batchEnrich);
-router.get("/logs", authMiddleware, roleGuard("admin"), crawlController.getLogs);
-router.delete("/logs", authMiddleware, roleGuard("admin"), crawlController.deleteLogs);
+router.post("/isbn/:isbn", authMiddleware, roleGuard("librarian"), crawlController.enrichByIsbn);
+router.post("/batch", authMiddleware, roleGuard("librarian"), crawlController.batchEnrich);
+router.get("/logs", authMiddleware, roleGuard("librarian"), crawlController.getLogs);
+router.delete("/logs", authMiddleware, roleGuard("librarian"), crawlController.deleteLogs);
 
 export default router;

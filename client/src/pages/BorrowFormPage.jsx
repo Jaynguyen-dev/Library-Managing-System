@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import api from "../services/api";
 
@@ -15,7 +16,7 @@ export default function BorrowFormPage() {
   useEffect(() => {
     let cancelled = false;
     Promise.all([
-      api.get("/api/users?role=student"),
+      api.get("/api/users?role=user"),
       api.get("/api/books"),
     ]).then(([usersRes, booksRes]) => {
       if (cancelled) return;
@@ -48,7 +49,7 @@ export default function BorrowFormPage() {
     e.preventDefault();
     setError("");
     const uid = parseInt(form.user_id, 10);
-    if (!uid || isNaN(uid)) { setError("Please select a student"); return; }
+    if (!uid || isNaN(uid)) { setError("Please select a user"); return; }
     if (form.items.some((i) => !i.book_id)) { setError("Please select a book for each item"); return; }
     setSaving(true);
     try {
@@ -64,32 +65,38 @@ export default function BorrowFormPage() {
 
   if (initialLoading) {
     return (
-      <div className="card" style={{ padding: "48px", textAlign: "center", color: "var(--sf-text-2)" }}>
-        <i className="ti ti-loader" style={{ fontSize: "24px", animation: "spin 1s linear infinite", display: "block", marginBottom: "12px" }}></i>
-        Loading form…
+      <div className="card" style={{ padding: "48px", textAlign: "center" }}>
+        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          style={{ width: 24, height: 24, borderRadius: "50%", border: "3px solid #2a2a2a", borderTopColor: "#1ed760", margin: "0 auto 12px" }}
+        />
+        <div style={{ color: "var(--sf-text-2)" }}>Loading form…</div>
       </div>
     );
   }
 
   return (
-    <div style={{ display: "flex", justifyContent: "center" }}>
+    <motion.div style={{ display: "flex", justifyContent: "center" }} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
       <div className="form-card">
-        <h1 style={{ fontSize: "22px", fontWeight: 500, letterSpacing: "-0.5px", marginBottom: "20px" }}>
+        <h1 style={{ fontSize: "22px", fontWeight: 600, letterSpacing: "-0.5px", marginBottom: "20px" }}>
           New Borrow
         </h1>
         <form onSubmit={handleSubmit}>
           {error && (
-            <div style={{ background: "#FFF0EF", color: "#991B1B", fontSize: "13px", padding: "10px 14px", borderRadius: "8px", marginBottom: "16px" }}>{error}</div>
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              style={{ background: "var(--sf-red-bg)", color: "var(--sf-red)", fontSize: "13px", padding: "10px 14px", borderRadius: "8px", marginBottom: "16px" }}
+            >{error}</motion.div>
           )}
           <div className="form-row">
-            <label className="form-label">Student</label>
+            <label className="form-label">User</label>
             <select
               className="form-input"
               value={form.user_id}
               onChange={(e) => setForm({ ...form, user_id: e.target.value })}
               required
             >
-              <option value="">Select student…</option>
+              <option value="">Select user…</option>
               {users.map((u) => (
                 <option key={u.id} value={u.id}>{u.full_name} ({u.email})</option>
               ))}
@@ -119,22 +126,29 @@ export default function BorrowFormPage() {
                   min="1" max="3"
                   style={{ width: "70px", flexShrink: 0 }}
                 />
-                <button type="button" onClick={() => removeItem(idx)} style={{ color: "var(--sf-red)", fontSize: "18px", background: "none", border: "none", cursor: "pointer", padding: "0 4px" }}>
+                <motion.button type="button" onClick={() => removeItem(idx)} style={{ color: "var(--sf-red)", fontSize: "18px", background: "none", border: "none", cursor: "pointer", padding: "0 4px" }} whileHover={{ scale: 1.2 }} whileTap={{ scale: 0.9 }}>
                   <i className="ti ti-x"></i>
-                </button>
+                </motion.button>
               </div>
             ))}
             {form.items.length < 3 && (
-              <button type="button" onClick={addItem} style={{ color: "var(--sf-accent)", fontSize: "13px", background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}>
+              <motion.button type="button" onClick={addItem} style={{ color: "var(--sf-accent)", fontSize: "13px", background: "none", border: "none", cursor: "pointer", padding: "4px 0" }} whileHover={{ scale: 1.02 }}>
                 <i className="ti ti-plus" style={{ marginRight: "4px" }}></i>Add book
-              </button>
+              </motion.button>
             )}
           </div>
-          <button type="submit" disabled={saving} className="btn btn-primary" style={{ width: "100%", justifyContent: "center", padding: "10px", fontSize: "14px", borderRadius: "10px", marginTop: "4px" }}>
+          <motion.button
+            type="submit"
+            disabled={saving}
+            className="btn btn-primary"
+            style={{ width: "100%", justifyContent: "center", padding: "10px", fontSize: "14px", borderRadius: "10px", marginTop: "4px" }}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.98 }}
+          >
             {saving ? "Creating…" : "Create Borrow"}
-          </button>
+          </motion.button>
         </form>
       </div>
-    </div>
+    </motion.div>
   );
 }

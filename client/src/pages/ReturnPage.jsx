@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import api from "../services/api";
 import { formatDate, formatCurrency } from "../utils/format";
 
@@ -21,7 +22,7 @@ export default function ReturnPage() {
     setSubmitting(true);
     setError("");
     try {
-      await api.patch(`/api/borrows/${id}/return`);
+      await api.patch(`/api/borrows/${id}/confirm-return`);
       navigate("/borrows");
     } catch (err) {
       setError(err.response?.data?.message || "Failed to process return");
@@ -38,13 +39,17 @@ export default function ReturnPage() {
   const fineAmount = daysOverdue * 2000;
 
   return (
-    <div style={{ display: "flex", justifyContent: "center" }}>
+    <motion.div style={{ display: "flex", justifyContent: "center" }} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
       <div className="form-card">
-        <h1 style={{ fontSize: "22px", fontWeight: 500, letterSpacing: "-0.5px", marginBottom: "20px" }}>
+        <h1 style={{ fontSize: "22px", fontWeight: 600, letterSpacing: "-0.5px", marginBottom: "20px" }}>
           Confirm Return
         </h1>
         {error && (
-          <div style={{ background: "#FFF0EF", color: "#991B1B", fontSize: "13px", padding: "10px 14px", borderRadius: "8px", marginBottom: "16px" }}>{error}</div>
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            style={{ background: "var(--sf-red-bg)", color: "var(--sf-red)", fontSize: "13px", padding: "10px 14px", borderRadius: "8px", marginBottom: "16px" }}
+          >{error}</motion.div>
         )}
         <div className="form-row">
           <label className="form-label">Student</label>
@@ -63,15 +68,29 @@ export default function ReturnPage() {
           <div style={{ fontSize: "14px" }}>{formatDate(borrow.due_date)}</div>
         </div>
         {overdue && (
-          <div style={{ background: "#FFF0EF", borderRadius: "8px", padding: "14px", marginBottom: "16px" }}>
-            <div style={{ fontWeight: 500, color: "#991B1B" }}>Overdue by {daysOverdue} days</div>
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            style={{ background: "var(--sf-red-bg)", borderRadius: "8px", padding: "14px", marginBottom: "16px" }}
+          >
+            <div style={{ fontWeight: 600, color: "var(--sf-red)" }}>
+              <i className="ti ti-alert-triangle" style={{ marginRight: "6px" }}></i>
+              Overdue by {daysOverdue} days
+            </div>
             <div style={{ fontSize: "14px", color: "var(--sf-red)" }}>Fine: {formatCurrency(fineAmount)}</div>
-          </div>
+          </motion.div>
         )}
-        <button onClick={handleReturn} disabled={submitting} className="btn btn-primary" style={{ width: "100%", justifyContent: "center", padding: "10px", fontSize: "14px", borderRadius: "10px" }}>
+        <motion.button
+          onClick={handleReturn}
+          disabled={submitting}
+          className="btn btn-primary"
+          style={{ width: "100%", justifyContent: "center", padding: "10px", fontSize: "14px", borderRadius: "10px" }}
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.98 }}
+        >
           {submitting ? "Processing…" : "Confirm Return"}
-        </button>
+        </motion.button>
       </div>
-    </div>
+    </motion.div>
   );
 }

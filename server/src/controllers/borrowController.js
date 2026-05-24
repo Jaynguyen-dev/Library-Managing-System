@@ -34,7 +34,7 @@ export async function getById(req, res, next) {
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) return error(res, "Invalid borrow id", 400);
     const borrow = await borrowService.getBorrowById(id);
-    if (req.user.role === "student" && borrow.user_id !== req.user.id) {
+    if (req.user.role === "user" && borrow.user_id !== req.user.id) {
       return error(res, "Forbidden", 403);
     }
     return success(res, { borrow });
