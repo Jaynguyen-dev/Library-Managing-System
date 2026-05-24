@@ -12,11 +12,9 @@ export default function ReturnPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    api.get("/api/borrows").then(({ data }) => {
-      const b = data.data.borrows.find((br) => br.id === parseInt(id));
-      setBorrow(b);
-      setLoading(false);
-    }).catch(() => setLoading(false));
+    api.get(`/api/borrows/${id}`)
+      .then(({ data }) => { setBorrow(data.data.borrow); setLoading(false); })
+      .catch(() => setLoading(false));
   }, [id]);
 
   const handleReturn = async () => {
@@ -32,42 +30,46 @@ export default function ReturnPage() {
     }
   };
 
-  if (loading) return <div className="text-center py-12 text-ink-muted-48">Loading...</div>;
-  if (!borrow) return <div className="text-center py-12 text-ink-muted-48">Borrow record not found.</div>;
+  if (loading) return <div style={{ textAlign: "center", padding: "48px", color: "var(--sf-text-2)" }}>Loading…</div>;
+  if (!borrow) return <div style={{ textAlign: "center", padding: "48px", color: "var(--sf-text-2)" }}>Borrow record not found.</div>;
 
   const overdue = new Date() > new Date(borrow.due_date);
   const daysOverdue = overdue ? Math.ceil((new Date() - new Date(borrow.due_date)) / (1000 * 60 * 60 * 24)) : 0;
   const fineAmount = daysOverdue * 2000;
 
   return (
-    <div className="max-w-lg mx-auto">
-      <h1 className="text-display-md mb-6">Confirm Return</h1>
-      <div className="bg-white rounded-lg p-8 border border-hairline">
-        {error && <div className="bg-red-50 text-red-600 text-sm p-3 rounded-md mb-4">{error}</div>}
-        <div className="mb-4">
-          <p className="text-caption text-ink-muted-80">Student</p>
-          <p className="text-body-strong">{borrow.user?.full_name}</p>
+    <div style={{ display: "flex", justifyContent: "center" }}>
+      <div className="form-card">
+        <h1 style={{ fontSize: "22px", fontWeight: 500, letterSpacing: "-0.5px", marginBottom: "20px" }}>
+          Confirm Return
+        </h1>
+        {error && (
+          <div style={{ background: "#FFF0EF", color: "#991B1B", fontSize: "13px", padding: "10px 14px", borderRadius: "8px", marginBottom: "16px" }}>{error}</div>
+        )}
+        <div className="form-row">
+          <label className="form-label">Student</label>
+          <div style={{ fontSize: "14px", fontWeight: 500 }}>{borrow.user?.full_name}</div>
         </div>
-        <div className="mb-4">
-          <p className="text-caption text-ink-muted-80">Books</p>
-          <p className="text-body">{borrow.items?.map((i) => i.book?.title).join(", ")}</p>
+        <div className="form-row">
+          <label className="form-label">Books</label>
+          <div style={{ fontSize: "14px" }}>{borrow.items?.map((i) => i.book?.title).join(", ")}</div>
         </div>
-        <div className="mb-4">
-          <p className="text-caption text-ink-muted-80">Borrow Date</p>
-          <p className="text-body">{formatDate(borrow.borrow_date)}</p>
+        <div className="form-row">
+          <label className="form-label">Borrow Date</label>
+          <div style={{ fontSize: "14px" }}>{formatDate(borrow.borrow_date)}</div>
         </div>
-        <div className="mb-4">
-          <p className="text-caption text-ink-muted-80">Due Date</p>
-          <p className="text-body">{formatDate(borrow.due_date)}</p>
+        <div className="form-row">
+          <label className="form-label">Due Date</label>
+          <div style={{ fontSize: "14px" }}>{formatDate(borrow.due_date)}</div>
         </div>
         {overdue && (
-          <div className="mb-6 p-4 bg-red-50 rounded-lg">
-            <p className="text-body-strong text-red-600">Overdue by {daysOverdue} days</p>
-            <p className="text-body text-red-500">Fine: {formatCurrency(fineAmount)}</p>
+          <div style={{ background: "#FFF0EF", borderRadius: "8px", padding: "14px", marginBottom: "16px" }}>
+            <div style={{ fontWeight: 500, color: "#991B1B" }}>Overdue by {daysOverdue} days</div>
+            <div style={{ fontSize: "14px", color: "var(--sf-red)" }}>Fine: {formatCurrency(fineAmount)}</div>
           </div>
         )}
-        <button onClick={handleReturn} disabled={submitting} className="w-full bg-primary text-white rounded-pill py-3 text-body font-medium hover:bg-primary-focus transition active:scale-[0.98] disabled:opacity-50">
-          {submitting ? "Processing..." : "Confirm Return"}
+        <button onClick={handleReturn} disabled={submitting} className="btn btn-primary" style={{ width: "100%", justifyContent: "center", padding: "10px", fontSize: "14px", borderRadius: "10px" }}>
+          {submitting ? "Processing…" : "Confirm Return"}
         </button>
       </div>
     </div>

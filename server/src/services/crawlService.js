@@ -1,10 +1,8 @@
-import { PrismaClient } from "@prisma/client";
+import prisma from "../config/db.js";
 import * as openLib from "../crawlers/openLibraryCrawler.js";
 import * as googleBooks from "../crawlers/googleBooksCrawler.js";
 import { delay } from "../crawlers/crawlerUtils.js";
 import { ENV } from "../config/env.js";
-
-const prisma = new PrismaClient();
 
 export async function enrichByIsbn(isbn) {
   const book = await prisma.book.findUnique({ where: { isbn } });

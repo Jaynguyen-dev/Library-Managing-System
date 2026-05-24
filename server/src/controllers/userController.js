@@ -4,8 +4,10 @@ import { success, error } from "../utils/responseHelper.js";
 export async function list(req, res, next) {
   try {
     const role = req.query.role || "";
-    const users = await userService.listUsers(role);
-    return success(res, { users });
+    const page = req.query.page;
+    const limit = req.query.limit;
+    const result = await userService.listUsers(role, page, limit);
+    return success(res, { users: result.data, pagination: { total: result.total, page: result.page, limit: result.limit, pages: result.pages } });
   } catch (err) { next(err); }
 }
 

@@ -9,34 +9,40 @@ export function AuthProvider({ children }) {
     return stored ? JSON.parse(stored) : null;
   });
   const [token, setToken] = useState(() => localStorage.getItem("lms_token"));
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => Boolean(localStorage.getItem("lms_token")));
 
   useEffect(() => {
-    if (token) {
-      api
-        .get("/api/auth/me")
-        .then((res) => {
-          const u = res.data.data.user;
-          setUser(u);
-          localStorage.setItem("lms_user", JSON.stringify(u));
-        })
-        .catch(() => {
-          setToken(null);
-          setUser(null);
-          localStorage.removeItem("lms_token");
-          localStorage.removeItem("lms_user");
-        })
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
-  }, [token]);
+    if (!token) return;
+
+    let cancelled = false;
+    api
+      .get("/api/auth/me")
+      .then((res) => {
+        if (cancelled) return;
+        const u = res.data.data.user;
+        setUser(u);
+        localStorage.setItem("lms_user", JSON.stringify(u));
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setUser(null);
+        setToken(null);
+        localStorage.removeItem("lms_token");
+        localStorage.removeItem("lms_user");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const login = (tokenStr, userData) => {
     localStorage.setItem("lms_token", tokenStr);
     localStorage.setItem("lms_user", JSON.stringify(userData));
     setToken(tokenStr);
     setUser(userData);
+    setLoading(false);
   };
 
   const logout = () => {
@@ -53,6 +59,7 @@ export function AuthProvider({ children }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");

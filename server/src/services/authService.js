@@ -1,9 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { PrismaClient } from "@prisma/client";
+import prisma from "../config/db.js";
 import { ENV } from "../config/env.js";
-
-const prisma = new PrismaClient();
 
 export async function register(fullName, email, password) {
   const existing = await prisma.user.findUnique({ where: { email } });

@@ -17,21 +17,26 @@ model User {
   created_at    DateTime       @default(now())
   borrows       BorrowRecord[]
   fines         Fine[]
+  wallet        Wallet?
+  reservations  Reservation[]
 }
 
 model Book {
-  id                 Int           @id @default(autoincrement())
-  title              String
-  author             String
-  isbn               String        @unique
-  category           String
-  total_quantity     Int           @default(1)
-  available_quantity Int           @default(1)
-  is_deleted         Boolean       @default(false)
-  created_at         DateTime      @default(now())
-  updated_at         DateTime      @updatedAt
-  borrow_items       BorrowItem[]
-  metadata           BookMetadata?
+  id                  Int           @id @default(autoincrement())
+  title               String
+  author              String
+  isbn                String        @unique
+  category            String
+  total_quantity      Int           @default(1)
+  available_quantity  Int           @default(1)
+  is_deleted          Boolean       @default(false)
+  reserved_for_user_id Int?
+  reservation_expires_at DateTime?
+  created_at          DateTime      @default(now())
+  updated_at          DateTime      @updatedAt
+  borrow_items        BorrowItem[]
+  metadata            BookMetadata?
+  reservations        Reservation[]
 
   @@index([title])
   @@index([is_deleted])
@@ -55,19 +60,19 @@ model BookMetadata {
 }
 
 model BorrowRecord {
-  id          Int          @id @default(autoincrement())
-  user_id     Int
-  borrow_date DateTime     @default(now())
-  due_date    DateTime
-  return_date DateTime?
-  status      String       @default("active")
-  user        User         @relation(fields: [user_id], references: [id])
-  items       BorrowItem[]
-  fines       Fine[]
-
-  @@index([user_id])
-  @@index([status])
-  @@index([due_date])
+  id                Int          @id @default(autoincrement())
+  user_id           Int
+  borrow_date       DateTime     @default(now())
+  due_date          DateTime
+  return_date       DateTime?
+  return_requested_at DateTime?
+  confirmed_by      Int?
+  status            String       @default("active")
+  reminder_sent     Boolean      @default(false)
+  reminder_sent_at  DateTime?
+  user              User         @relation(fields: [user_id], references: [id])
+  items             BorrowItem[]
+  fines             Fine[]
 }
 
 model BorrowItem {
@@ -86,12 +91,95 @@ model Fine {
   amount           Int
   reason           String       @default("Overdue return")
   is_paid          Boolean      @default(false)
+  paid_at          DateTime?
+  paid_by          Int?
+  payment_method   String?
+  overdue_days     Int?
   created_at       DateTime     @default(now())
   borrow_record    BorrowRecord @relation(fields: [borrow_record_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   user             User         @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  payments         FinePayment[]
 
   @@index([user_id])
   @@index([is_paid])
+}
+
+model Wallet {
+  id        Int      @id @default(autoincrement())
+  user_id   Int      @unique
+  balance   Int      @default(0)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  user      User     @relation(fields: [user_id], references: [id])
+  transactions WalletTransaction[]
+  fine_payments FinePayment[]
+}
+
+model WalletTransaction {
+  id             Int      @id @default(autoincrement())
+  wallet_id      Int
+  amount         Int
+  balance_before Int?
+  balance_after  Int?
+  type           String   // "topup" | "deduction" | "refund" | "fine_payment"
+  status         String   @default("completed") // "pending" | "completed" | "failed"
+  payment_method String?  // "visa" | "mastercard" | "momo" | "banking" | "system"
+  reference      String?  // fine ID, borrow ID, etc.
+  description    String?
+  created_at     DateTime @default(now())
+  wallet         Wallet   @relation(fields: [wallet_id], references: [id])
+
+  @@index([wallet_id])
+  @@index([type])
+  @@index([created_at])
+}
+
+model FinePayment {
+  id             Int      @id @default(autoincrement())
+  fine_id       Int
+  wallet_id     Int
+  amount        Int
+  created_at    DateTime @default(now())
+  fine          Fine     @relation(fields: [fine_id], references: [id], onDelete: NoAction)
+  wallet        Wallet   @relation(fields: [wallet_id], references: [id])
+
+  @@index([fine_id])
+  @@index([wallet_id])
+}
+
+model Notification {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  title      String
+  message    String
+  type       String   @default("info") // "reminder" | "overdue" | "fine" | "payment" | "info"
+  is_read    Boolean  @default(false)
+  reference  String?  // borrow ID, fine ID, etc.
+  created_at DateTime @default(now())
+
+  @@index([user_id])
+  @@index([is_read])
+  @@index([created_at])
+}
+
+model Reservation {
+  id             Int       @id @default(autoincrement())
+  user_id        Int
+  book_id        Int
+  status         String    @default("waiting") // waiting | notified | expired | completed | cancelled
+  queue_position Int?
+  reserved_at    DateTime  @default(now())
+  notified_at    DateTime?
+  expires_at     DateTime?
+  completed_at   DateTime?
+  cancelled_at   DateTime?
+  user           User      @relation(fields: [user_id], references: [id])
+  book           Book      @relation(fields: [book_id], references: [id])
+
+  @@index([user_id])
+  @@index([book_id])
+  @@index([status])
+  @@index([book_id, status])
 }
 
 model CrawlLog {

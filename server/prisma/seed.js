@@ -1,10 +1,12 @@
-import { PrismaClient } from "@prisma/client";
+import prisma from "../src/config/db.js";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
+import * as openLib from "../src/crawlers/openLibraryCrawler.js";
+import { delay } from "../src/crawlers/crawlerUtils.js";
 
 dotenv.config();
 
-const prisma = new PrismaClient();
+const OPEN_LIB_COVERS = "https://covers.openlibrary.org/b/isbn";
 
 async function seedUsers() {
   const hash = (pwd) => bcrypt.hash(pwd, 10);
@@ -69,6 +71,58 @@ async function seedBooks() {
   console.log("Books seeded (idempotent upsert)");
 }
 
+async function seedMetadata() {
+  const books = await prisma.book.findMany({ where: { is_deleted: false, metadata: null } });
+  if (books.length === 0) {
+    console.log("All books already have metadata — skipping");
+    return;
+  }
+
+  for (const book of books) {
+    const coverUrl = `${OPEN_LIB_COVERS}/${book.isbn}-L.jpg`;
+
+    let olData = null;
+    try {
+      olData = await openLib.fetchByIsbn(book.isbn);
+      await delay(350);
+    } catch {
+      console.log(`  [ISBN ${book.isbn}] Open Library crawl failed, using default cover`);
+    }
+
+    const subjectsRaw = olData?.subjects || null;
+    const subjectsSafe = subjectsRaw && subjectsRaw.length > 500 ? subjectsRaw.slice(0, 497) + "..." : subjectsRaw;
+
+    await prisma.bookMetadata.upsert({
+      where: { book_id: book.id },
+      create: {
+        book_id: book.id,
+        cover_image_url: olData?.cover_image_url || coverUrl,
+        description: olData?.description || null,
+        publisher: olData?.publisher || null,
+        publish_year: olData?.publish_year || null,
+        subjects: subjectsSafe,
+        page_count: olData?.page_count || null,
+        source_url: olData?.source_url || null,
+        crawled_at: new Date(),
+      },
+      update: {
+        cover_image_url: olData?.cover_image_url || coverUrl,
+        description: olData?.description || null,
+        publisher: olData?.publisher || null,
+        publish_year: olData?.publish_year || null,
+        subjects: subjectsSafe,
+        page_count: olData?.page_count || null,
+        source_url: olData?.source_url || null,
+        crawled_at: new Date(),
+      },
+    });
+
+    console.log(`  [${book.isbn}] ${book.title}: ${olData ? "enriched from Open Library" : "default cover URL set"}`);
+  }
+
+  console.log(`BookMetadata seeded for ${books.length} books`);
+}
+
 async function seedBorrowRecords() {
   const existingCount = await prisma.borrowRecord.count();
   if (existingCount > 0) {
@@ -80,14 +134,14 @@ async function seedBorrowRecords() {
   const books = await prisma.book.findMany();
 
   const now = new Date();
-  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
   const borrow1 = await prisma.borrowRecord.create({
     data: {
       user_id: student.id,
-      borrow_date: sevenDaysAgo,
-      due_date: sevenDaysFromNow,
+      borrow_date: thirtyDaysAgo,
+      due_date: thirtyDaysFromNow,
       return_date: now,
       status: "returned",
       items: {
@@ -98,12 +152,15 @@ async function seedBorrowRecords() {
 
   console.log("On-time borrow record created");
 
+  const pastDate3 = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+
   const borrow2 = await prisma.borrowRecord.create({
     data: {
       user_id: student.id,
       borrow_date: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000),
-      due_date: sevenDaysAgo,
-      status: "overdue",
+      due_date: thirtyDaysAgo,
+      return_date: pastDate3,
+      status: "returned",
       items: {
         create: [{ book_id: books[0].id, quantity: 1 }],
       },
@@ -120,7 +177,7 @@ async function seedBorrowRecords() {
     },
   });
 
-  console.log("Overdue borrow record + fine created");
+  console.log("Overdue borrow record (returned) + fine created");
 }
 
 async function main() {
@@ -128,6 +185,7 @@ async function main() {
 
   await seedUsers();
   await seedBooks();
+  await seedMetadata();
   await seedBorrowRecords();
 
   console.log("Seed completed successfully!");

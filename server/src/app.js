@@ -10,6 +10,9 @@ import borrowRoutes from "./routes/borrow.routes.js";
 import fineRoutes from "./routes/fine.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
 import crawlRoutes from "./routes/crawl.routes.js";
+import walletRoutes from "./routes/wallet.routes.js";
+import notificationRoutes from "./routes/notification.routes.js";
+import reservationRoutes from "./routes/reservation.routes.js";
 
 const app = express();
 
@@ -23,6 +26,9 @@ app.use("/api/borrows", borrowRoutes);
 app.use("/api/fines", fineRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/crawl", crawlRoutes);
+app.use("/api/wallet", walletRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/reservations", reservationRoutes);
 
 app.use(errorHandler);
 

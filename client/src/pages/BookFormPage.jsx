@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import toast from "react-hot-toast";
 import api from "../services/api";
 
 export default function BookFormPage() {
@@ -15,23 +16,31 @@ export default function BookFormPage() {
       api.get(`/api/books/${id}`).then(({ data }) => {
         const b = data.data.book;
         setForm({ title: b.title, author: b.author, isbn: b.isbn, category: b.category, total_quantity: b.total_quantity });
-      }).catch(console.error);
+      }).catch(() => {
+        toast.error("Failed to load book");
+        navigate("/books");
+      });
     }
-  }, [id, isEdit]);
+  }, [id, isEdit, navigate]);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    if (!isEdit && form.isbn && !/^(?:\d{10}|\d{13}|\d{3}-\d{1,5}-\d{1,7}-\d{1,7}-[\dX])$/.test(form.isbn.trim())) {
+      setError("Invalid ISBN format (must be 10 or 13 digits)");
+      return;
+    }
     setLoading(true);
     try {
       if (isEdit) {
         await api.put(`/api/books/${id}`, form);
       } else {
-        const { data } = await api.post("/api/books", form);
+        await api.post("/api/books", form);
         api.post(`/api/crawl/isbn/${form.isbn}`).catch(() => {});
       }
+      toast.success(isEdit ? "Book updated" : "Book created");
       navigate("/books");
     } catch (err) {
       setError(err.response?.data?.message || "Failed to save book");
@@ -41,24 +50,44 @@ export default function BookFormPage() {
   };
 
   return (
-    <div className="max-w-lg mx-auto">
-      <h1 className="text-display-md mb-6">{isEdit ? "Edit Book" : "Add Book"}</h1>
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg p-8 border border-hairline">
-        {error && <div className="bg-red-50 text-red-600 text-sm p-3 rounded-md mb-4">{error}</div>}
-        {["title", "author", "isbn", "category"].map((field) => (
-          <div className="mb-4" key={field}>
-            <label className="block text-caption text-ink-muted-80 mb-1 capitalize">{field.replace("_", " ")}</label>
-            <input name={field} value={form[field]} onChange={handleChange} className="w-full px-4 py-3 rounded-pill border border-hairline text-body focus:outline-none focus:border-primary transition" required />
+    <div style={{ display: "flex", justifyContent: "center" }}>
+      <div className="form-card">
+        <h1 style={{ fontSize: "22px", fontWeight: 500, letterSpacing: "-0.5px", marginBottom: "20px" }}>
+          {isEdit ? "Edit Book" : "Add Book"}
+        </h1>
+        <form onSubmit={handleSubmit}>
+          {error && (
+            <div style={{ background: "#FFF0EF", color: "#991B1B", fontSize: "13px", padding: "10px 14px", borderRadius: "8px", marginBottom: "16px" }}>{error}</div>
+          )}
+          {["title", "author", "isbn", "category"].map((field) => (
+            <div className="form-row" key={field}>
+              <label className="form-label">{field.charAt(0).toUpperCase() + field.slice(1).replace("_", " ")}</label>
+              <input
+                name={field}
+                value={form[field]}
+                onChange={handleChange}
+                className="form-input"
+                required
+              />
+            </div>
+          ))}
+          <div className="form-row">
+            <label className="form-label">Total Quantity</label>
+            <input
+              type="number"
+              name="total_quantity"
+              value={form.total_quantity}
+              onChange={handleChange}
+              min="1"
+              className="form-input"
+              required
+            />
           </div>
-        ))}
-        <div className="mb-6">
-          <label className="block text-caption text-ink-muted-80 mb-1">Total Quantity</label>
-          <input type="number" name="total_quantity" value={form.total_quantity} onChange={handleChange} min="1" className="w-full px-4 py-3 rounded-pill border border-hairline text-body focus:outline-none focus:border-primary transition" required />
-        </div>
-        <button type="submit" disabled={loading} className="w-full bg-primary text-white rounded-pill py-3 text-body font-medium hover:bg-primary-focus transition active:scale-[0.98] disabled:opacity-50">
-          {loading ? "Saving..." : isEdit ? "Update Book" : "Add Book"}
-        </button>
-      </form>
+          <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: "100%", justifyContent: "center", padding: "10px", fontSize: "14px", borderRadius: "10px", marginTop: "4px" }}>
+            {loading ? "Saving…" : isEdit ? "Update Book" : "Add Book"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

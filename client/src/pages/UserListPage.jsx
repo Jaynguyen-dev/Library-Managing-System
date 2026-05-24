@@ -1,70 +1,159 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
 import api from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
+import Pagination from "../components/Pagination";
+import { formatDate } from "../utils/format";
+
+function getInitials(name) {
+  if (!name) return "?";
+  return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+}
+
+function avatarClass(role) {
+  if (role === "admin") return "";
+  if (role === "student") return "green";
+  return "blue";
+}
+
+function roleBadge(role) {
+  const cls = role === "admin" ? "badge-blue" : role === "librarian" ? "badge-gray" : "badge-green";
+  return <span className={`badge ${cls}`}>{role}</span>;
+}
+
+function statusBadge(active) {
+  return active
+    ? <span className="badge badge-green">Active</span>
+    : <span className="badge badge-red">Locked</span>;
+}
 
 export default function UserListPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [roleFilter, setRoleFilter] = useState("");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ total: 0, pages: 0 });
 
-  const fetchUsers = async () => {
+  useEffect(() => {
+    const params = { page: 1, limit: 20 };
+    api.get("/api/users", { params })
+      .then(({ data }) => {
+        setUsers(data.data.users);
+        setPagination(data.data.pagination || { total: 0, pages: 0 });
+      })
+      .catch((err) => toast.error(err.response?.data?.message || "Failed to load users"))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleRoleFilter = (r) => {
+    setRoleFilter(r);
+    setPage(1);
     setLoading(true);
-    try {
-      const { data } = await api.get("/api/users");
-      setUsers(data.data.users);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+    const params = { page: 1, limit: 20 };
+    if (r) params.role = r;
+    api.get("/api/users", { params })
+      .then(({ data }) => {
+        setUsers(data.data.users);
+        setPagination(data.data.pagination || { total: 0, pages: 0 });
+      })
+      .catch((err) => toast.error(err.response?.data?.message || "Failed to load users"))
+      .finally(() => setLoading(false));
   };
 
-  useEffect(() => { fetchUsers(); }, []);
+  const handlePageChange = (p) => {
+    setPage(p);
+    setLoading(true);
+    const params = { page: p, limit: 20 };
+    if (roleFilter) params.role = roleFilter;
+    api.get("/api/users", { params })
+      .then(({ data }) => {
+        setUsers(data.data.users);
+        setPagination(data.data.pagination || { total: 0, pages: 0 });
+      })
+      .catch((err) => toast.error(err.response?.data?.message || "Failed to load users"))
+      .finally(() => setLoading(false));
+  };
 
   const handleToggleActive = async (id) => {
     try {
       await api.patch(`/api/users/${id}/toggle-active`);
-      fetchUsers();
+      toast.success("User status toggled");
+      handlePageChange(page);
     } catch (err) {
-      console.error(err);
+      toast.error(err.response?.data?.message || "Failed to toggle status");
     }
-  };
-
-  const roleBadge = (role) => {
-    const colors = { admin: "bg-purple-50 text-purple-600", librarian: "bg-blue-50 text-blue-600", student: "bg-green-50 text-green-600" };
-    return <span className={`text-caption px-3 py-1 rounded-pill ${colors[role] || "bg-gray-50"}`}>{role}</span>;
   };
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-display-md">Users</h1>
-        <a href="/users/new" className="bg-primary text-white rounded-pill px-5 py-2 text-caption hover:bg-primary-focus transition active:scale-[0.98]">Add User</a>
+      <div className="section-header">
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <span className="section-title">Members</span>
+          <div className="tab-bar">
+            {["", "admin", "librarian", "student"].map((r) => (
+              <button
+                key={r}
+                className={`tab${roleFilter === r ? " active" : ""}`}
+                onClick={() => handleRoleFilter(r)}
+              >{r || "All"}</button>
+            ))}
+          </div>
+        </div>
+        {isAdmin && (
+          <Link to="/users/new" className="btn btn-primary">
+            <i className="ti ti-user-plus" aria-hidden="true"></i> Add Member
+          </Link>
+        )}
       </div>
 
       {loading ? (
-        <div className="text-center py-12 text-ink-muted-48">Loading...</div>
+        <div className="card" style={{ padding: "48px", textAlign: "center", color: "var(--sf-text-2)" }}>Loading…</div>
       ) : users.length === 0 ? (
-        <div className="text-center py-12 text-ink-muted-48">No users found.</div>
+        <div className="card" style={{ padding: "48px", textAlign: "center", color: "var(--sf-text-2)" }}>No users found.</div>
       ) : (
-        <div className="grid gap-3">
-          {users.map((u) => (
-            <div key={u.id} className="bg-white rounded-lg p-5 border border-hairline flex items-center justify-between">
-              <div>
-                <p className="text-body-strong">{u.full_name}</p>
-                <p className="text-caption text-ink-muted-48">{u.email}</p>
-              </div>
-              <div className="flex items-center gap-3">
-                {roleBadge(u.role)}
-                <span className={`text-caption px-3 py-1 rounded-pill ${u.is_active ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"}`}>
-                  {u.is_active ? "Active" : "Locked"}
-                </span>
-                <button onClick={() => handleToggleActive(u.id)} className="text-primary text-caption hover:underline">
-                  {u.is_active ? "Lock" : "Unlock"}
-                </button>
-              </div>
-            </div>
-          ))}
+        <div className="card">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Joined</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((u) => (
+                <tr key={u.id}>
+                  <td>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <div className={`avatar avatar-sm ${avatarClass(u.role)}`}>{getInitials(u.full_name)}</div>
+                      <span style={{ fontWeight: 500 }}>{u.full_name}</span>
+                    </div>
+                  </td>
+                  <td style={{ color: "var(--sf-text-2)" }}>{u.email}</td>
+                  <td>{roleBadge(u.role)}</td>
+                  <td>{statusBadge(u.is_active)}</td>
+                  <td style={{ color: "var(--sf-text-2)" }}>{formatDate(u.created_at)}</td>
+                  <td>
+                    {isAdmin && (
+                      <button className="icon-btn" title={u.is_active ? "Lock" : "Unlock"} onClick={() => handleToggleActive(u.id)}>
+                        <i className={`ti ti-${u.is_active ? "lock" : "lock-open"}`}></i>
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
+
+      <Pagination page={pagination.page || page} pages={pagination.pages} total={pagination.total} onPageChange={handlePageChange} />
     </div>
   );
 }

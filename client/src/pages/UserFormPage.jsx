@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import api from "../services/api";
 
 export default function UserFormPage() {
@@ -13,9 +14,12 @@ export default function UserFormPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    if (!form.email.includes("@")) { setError("Please enter a valid email address"); return; }
+    if (form.password.length < 6) { setError("Password must be at least 6 characters"); return; }
     setLoading(true);
     try {
       await api.post("/api/users", form);
+      toast.success("User created");
       navigate("/users");
     } catch (err) {
       setError(err.response?.data?.message || "Failed to create user");

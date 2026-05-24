@@ -18,7 +18,8 @@ export default function LoginPage() {
     try {
       const { data } = await api.post("/api/auth/login", { email, password });
       login(data.data.token, data.data.user);
-      navigate("/dashboard");
+      const target = data.data.user.role === "student" ? "/my-dashboard" : "/dashboard";
+      navigate(target);
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
     } finally {
@@ -27,46 +28,55 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-parchment flex items-center justify-center px-5">
-      <div className="w-full max-w-sm">
-        <h1 className="text-display-lg text-center mb-2">Library LMS</h1>
-        <p className="text-body text-ink-muted-48 text-center mb-8">Sign in to your account</p>
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg p-8 shadow-sm border border-hairline">
+    <div className="login-wrap">
+      <div className="login-card">
+        <div className="login-logo">
+          <i className="ti ti-book-2" aria-hidden="true"></i>
+        </div>
+        <div className="login-title">Welcome back</div>
+        <div className="login-sub">Sign in to LibraryLMS</div>
+        <form onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-50 text-red-600 text-sm p-3 rounded-md mb-4">{error}</div>
+            <div style={{
+              background: "#FFF0EF", color: "#991B1B", fontSize: "13px",
+              padding: "10px 14px", borderRadius: "8px", marginBottom: "16px", textAlign: "left"
+            }}>{error}</div>
           )}
-          <div className="mb-4">
-            <label className="block text-caption text-ink-muted-80 mb-1">Email</label>
+          <div className="form-row" style={{ textAlign: "left" }}>
+            <label className="form-label">Email address</label>
             <input
+              className="form-input"
               type="email"
+              placeholder="you@student.edu.vn"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 rounded-pill border border-hairline text-body focus:outline-none focus:border-primary transition"
               required
             />
           </div>
-          <div className="mb-6">
-            <label className="block text-caption text-ink-muted-80 mb-1">Password</label>
+          <div className="form-row" style={{ textAlign: "left" }}>
+            <label className="form-label">Password</label>
             <input
+              className="form-input"
               type="password"
+              placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-pill border border-hairline text-body focus:outline-none focus:border-primary transition"
               required
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary text-white rounded-pill py-3 text-body font-medium hover:bg-primary-focus transition active:scale-[0.98] disabled:opacity-50"
+            className="btn btn-primary"
+            style={{ width: "100%", justifyContent: "center", padding: "10px", fontSize: "14px", borderRadius: "10px", marginTop: "4px" }}
           >
-            {loading ? "Signing in..." : "Sign In"}
+            {loading ? "Signing in…" : "Sign in"}
           </button>
-          <p className="text-center mt-4 text-caption text-ink-muted-48">
-            No account?{" "}
-            <Link to="/register" className="text-primary hover:underline">Register</Link>
-          </p>
         </form>
+        <p style={{ fontSize: "12px", color: "var(--sf-text-2)", marginTop: "16px" }}>
+          Don't have an account?{" "}
+          <Link to="/register" style={{ color: "var(--sf-accent)", textDecoration: "none" }}>Register</Link>
+        </p>
       </div>
     </div>
   );

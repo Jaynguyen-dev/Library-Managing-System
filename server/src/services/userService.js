@@ -1,16 +1,15 @@
 import bcrypt from "bcrypt";
-import { PrismaClient } from "@prisma/client";
+import prisma from "../config/db.js";
+import { paginate } from "../utils/paginate.js";
 
-const prisma = new PrismaClient();
-
-export async function listUsers(role) {
+export async function listUsers(role, page, limit) {
   const where = {};
   if (role) where.role = role;
-  return prisma.user.findMany({
+  return paginate(prisma.user, {
     where,
     select: { id: true, full_name: true, email: true, role: true, is_active: true, created_at: true },
     orderBy: { created_at: "desc" },
-  });
+  }, page, limit);
 }
 
 export async function createUser(data) {

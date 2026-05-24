@@ -1,8 +1,9 @@
-import { PrismaClient } from "@prisma/client";
+import prisma from "../config/db.js";
+import { paginate } from "../utils/paginate.js";
 
-const prisma = new PrismaClient();
+const OPEN_LIB_COVERS = "https://covers.openlibrary.org/b/isbn";
 
-export async function listBooks(search) {
+export async function listBooks(search, page, limit, available) {
   const where = { is_deleted: false };
   if (search) {
     where.OR = [
@@ -11,11 +12,16 @@ export async function listBooks(search) {
       { author: { contains: search } },
     ];
   }
-  return prisma.book.findMany({
+  if (available === "true") {
+    where.available_quantity = { gt: 0 };
+  } else if (available === "false") {
+    where.available_quantity = 0;
+  }
+  return paginate(prisma.book, {
     where,
     include: { metadata: true },
     orderBy: { created_at: "desc" },
-  });
+  }, page, limit);
 }
 
 export async function getBook(id) {
@@ -31,16 +37,30 @@ export async function createBook(data) {
   const existing = await prisma.book.findUnique({ where: { isbn: data.isbn } });
   if (existing) throw Object.assign(new Error("ISBN already exists"), { statusCode: 400 });
 
-  return prisma.book.create({
-    data: {
-      title: data.title,
-      author: data.author,
-      isbn: data.isbn,
-      category: data.category,
-      total_quantity: data.total_quantity || 1,
-      available_quantity: data.total_quantity || 1,
-    },
-    include: { metadata: true },
+  return prisma.$transaction(async (tx) => {
+    const book = await tx.book.create({
+      data: {
+        title: data.title,
+        author: data.author,
+        isbn: data.isbn,
+        category: data.category,
+        total_quantity: data.total_quantity || 1,
+        available_quantity: data.total_quantity || 1,
+      },
+    });
+
+    const coverUrl = `${OPEN_LIB_COVERS}/${data.isbn}-L.jpg`;
+
+    await tx.bookMetadata.upsert({
+      where: { book_id: book.id },
+      create: { book_id: book.id, cover_image_url: coverUrl },
+      update: { cover_image_url: coverUrl },
+    });
+
+    return tx.book.findUnique({
+      where: { id: book.id },
+      include: { metadata: true },
+    });
   });
 }
 
