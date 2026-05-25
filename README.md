@@ -332,9 +332,14 @@ final-project/
 ---
 ## Demo Visualization
 
-| Login Screen | Dashboard | Book Browsing |
-|---|---|---|
-| ![](demo/log_in_screen.png) | ![](demo/dashboard.png) | ![](demo/book_browsing.png) |
+### Login Screen
+![Login Screen](demo/log_in_screen.png)
+
+### Dashboard
+![Dashboard](demo/dashboard.png)
+
+### Book Browsing
+![Book Browsing](demo/book_browsing.png)
 ## ⚙️ Installation & Setup
 
 ### Prerequisites
