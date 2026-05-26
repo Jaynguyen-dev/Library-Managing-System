@@ -333,7 +333,7 @@ final-project/
 ## Demo Visualization
 
 ### Login Screen
-![Login Screen](demo/log_in_screen.png)
+![Login Screen](demo/log_in_panel.png)
 
 ### Dashboard
 ![Dashboard](demo/dashboard.png)
