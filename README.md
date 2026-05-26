@@ -61,20 +61,12 @@ graph TD
     subgraph External ["External Book Metadata Sources"]
         OL[Open Library REST API]
         GB[Google Books API]
-<<<<<<< HEAD
-        VB[Vinabook Web Scraper]
-=======
->>>>>>> ea6714c (Update UI, fix displaybugs of browsing books section:)
     end
 
     UI <-->|"HTTP / JWT Bearer Token"| R
     R --> M --> C --> S
     S <-->|"Prisma ORM"| DB
-<<<<<<< HEAD
-    CR <-->|"Axios Fetch / Cheerio Scrape"| External
-=======
     CR <-->|"Axios Fetch"| External
->>>>>>> ea6714c (Update UI, fix displaybugs of browsing books section:)
     CR -->|"Enrich & Persist"| DB
     C --> CR
 ```
@@ -102,33 +94,23 @@ graph TD
 
 | Layer | Technology | Version | Description | Why Chosen |
 | :--- | :--- | :---: | :--- | :--- |
-<<<<<<< HEAD
-| **Frontend** | React | 18 | Declarative component-based UI | Industry-standard; rich ecosystem and composable state model |
-| **Build Tool** | Vite | Latest | Dev server & ESM bundler | Sub-second HMR; significantly faster than CRA or Webpack |
-| **Styling** | Tailwind CSS | v3 | Utility-first CSS framework | Rapid layout iteration without naming collisions or dead CSS |
-| **State & Fetching** | Context API + Axios | — | Global state & HTTP client | Lightweight global state; Axios interceptors handle auth headers automatically |
-| **Animations** | Framer Motion | Latest | Declarative motion library | Smooth page transitions and micro-animations with minimal boilerplate |
-| **Backend** | Express.js | v4 | Minimal Node.js web framework | Unopinionated routing and middleware pipeline; easy to extend |
-| **Runtime** | Node.js | v18+ | JavaScript runtime | Single language (JS/JSX) across the entire stack |
-| **ORM** | Prisma | Latest | Type-safe database client | Auto-generated migrations, schema introspection, and rich DX |
-| **Database** | MS SQL Server | 2019+ | Relational storage engine | Aligns with course specifications; handles complex nested joins |
-| **Web Crawling** | Axios + Cheerio | — | HTTP client & HTML parser | Lightweight scraping and REST API consumption without a headless browser |
-| **Authentication** | jsonwebtoken + bcrypt | — | Stateless sessions & password hashing | Stateless JWT sessions; bcrypt provides secure salted password storage |
-=======
-| **Frontend** | React | 19.2 | Declarative component-based UI | Industry-standard; rich ecosystem and composable state model |
-| **Routing** | React Router | 7.15 | Client-side routing | Enables SPA navigation without page reloads |
-| **Build Tool** | Vite | 8.0 | Dev server & ESM bundler | Sub-second HMR; significantly faster than CRA or Webpack |
-| **Styling** | Tailwind CSS | v3.4 | Utility-first CSS framework | Rapid layout iteration without naming collisions or dead CSS |
-| **State & Fetching** | Context API + Axios | — | Global state & HTTP client | Lightweight global state; Axios interceptors handle auth headers automatically |
-| **Animations** | Framer Motion & GSAP | 12.4 / 3.15 | Declarative & timeline animations | Smooth page transitions and complex staggered micro-animations |
-| **Backend** | Express.js | 5.2 | Minimal Node.js web framework | Unopinionated routing and middleware pipeline; built-in async/await support |
-| **Background Jobs** | node-cron | 4.2 | Task scheduler | Runs automated background jobs like checking for overdue fines |
-| **Runtime** | Node.js | v18+ | JavaScript runtime | Single language (JS/JSX) across the entire stack |
-| **ORM** | Prisma | 6.19 | Type-safe database client | Auto-generated migrations, schema introspection, and rich DX |
-| **Database** | MS SQL Server | 2019+ | Relational storage engine | Aligns with course specifications; handles complex nested joins |
-| **Web Crawling** | Axios | 1.16 | HTTP client | Lightweight API querying and REST API consumption |
-| **Authentication** | jsonwebtoken + bcrypt | 9.0 / 6.0 | Stateless sessions & password hashing | Stateless JWT sessions; bcrypt provides secure salted password storage |
->>>>>>> ea6714c (Update UI, fix displaybugs of browsing books section:)
+
+### Frontend
+- **React (v19.2)**: Used for building declarative, component-based user interfaces. Chosen because its component lifecycle and state model provide an industry-standard, predictable way to build complex, highly-interactive SPAs.
+- **React Router (v7.15)**: Used for client-side routing. Ensures the app functions as a true Single Page Application (SPA) without reloading the page, granting readers a fast, seamless experience when browsing the catalogue or their wallet.
+- **Vite (v8.0)**: Used as the build tool and development server. Chosen for its sub-second Hot Module Replacement (HMR) and native ES modules support, offering vastly superior startup and compilation times compared to older bundlers like Webpack.
+- **Tailwind CSS (v3.4)**: Used as the utility-first CSS framework. Chosen to rapidly iterate on the Spotify-inspired dark UI directly in markup without needing to manage complex cascading stylesheets or worry about dead CSS classes.
+- **Context API + Axios**: Used for global state and HTTP requests. Chosen because Redux is overkill for this scope, and Axios interceptors provide an elegant way to seamlessly inject JWT auth tokens into every request header centrally.
+- **Framer Motion & GSAP**: Used for advanced declarative and timeline animations. Chosen to elevate the UI so it feels fluid and premium, using staggered micro-animations and smooth layout transitions that delight the user.
+
+### Backend
+- **Express.js (v5.2)**: Used as the minimal web framework for Node.js. Chosen for its unopinionated routing, robust middleware ecosystem (for auth and role guards), and built-in async/await handling in version 5.
+- **node-cron (v4.2)**: Used for scheduling background tasks. Chosen to automate daily background jobs such as checking overdue books and calculating dynamic fines without relying on external infrastructure.
+- **Node.js (v18+)**: Used as the runtime environment. Chosen to allow developers to use a single language (JavaScript) across both the client and server, reducing context switching.
+- **Prisma (v6.19)**: Used as the Object-Relational Mapper (ORM). Chosen for its auto-generated migrations, highly readable schema declaration files (`schema.prisma`), and type-safe database queries.
+- **MS SQL Server (2019+)**: Used as the relational storage engine. Chosen because it fulfills the university course specifications and handles complex nested relational queries efficiently.
+- **Axios (Server-side)**: Used to fetch external data. Chosen to query the Open Library and Google Books REST APIs reliably and parse their JSON payloads for the background metadata enrichment pipeline.
+- **jsonwebtoken & bcrypt**: Used for security and authentication. JWT is chosen for stateless, highly scalable session handling across API requests. bcrypt is chosen for secure, salted password hashing to protect reader credentials from database leaks.
 
 ---
 
@@ -258,20 +240,12 @@ The database is designed in **Third Normal Form (3NF)** and defined in `server/p
 
 **Auto-Crawl on Create** — Adding a new book with a valid ISBN-13 automatically triggers a background enrichment job.
 
-<<<<<<< HEAD
-**Multi-Source Merging** — The crawler queries three sources in parallel and merges the best available data:
-=======
 **Multi-Source Merging** — The crawler queries two primary REST APIs in parallel and merges the best available data:
->>>>>>> ea6714c (Update UI, fix displaybugs of browsing books section:)
 
 | Source | Method | Data Provided |
 | :--- | :--- | :--- |
 | Open Library REST API | HTTP GET | Cover images, author data, publish year, page count |
 | Google Books API | HTTP GET | Publisher, description, language, ratings |
-<<<<<<< HEAD
-| Vinabook | Cheerio HTML scraper | Vietnamese edition metadata, local pricing context |
-=======
->>>>>>> ea6714c (Update UI, fix displaybugs of browsing books section:)
 
 **Batch Enrichment** — Librarians can queue a batch enrichment run for all catalogue entries missing metadata. Requests are dispatched with concurrency limits and polite delays to avoid rate-limiting.
 
@@ -301,15 +275,6 @@ final-project/
 │   │   │   └── AuthContext.jsx      # Global auth state; JWT storage & refresh
 │   │   ├── layouts/
 │   │   │   └── MainLayout.jsx       # Shared page shell (sidebar + outlet)
-<<<<<<< HEAD
-│   │   ├── pages/                   # Route-level page components
-│   │   │   ├── Dashboard/           # Role-specific dashboard views
-│   │   │   ├── Books/               # Catalogue listing and detail pages
-│   │   │   ├── Borrows/             # Borrow management and history
-│   │   │   ├── Wallet/              # Wallet balance, top-up, fine payment
-│   │   │   ├── Reservations/        # Queue listing and management
-│   │   │   └── Users/               # Member management (Librarian only)
-=======
 │   │   ├── pages/                   # Route-level page components (flat structure)
 │   │   │   ├── Dashboard.jsx        # Admin / Librarian main dashboard
 │   │   │   ├── ReaderDashboard.jsx  # Student / Patron main dashboard
@@ -323,7 +288,7 @@ final-project/
 │   │   │   ├── MyReservationsPage.jsx# Current queue positions
 │   │   │   ├── LogViewerPage.jsx    # Diagnostic view for crawl logs
 │   │   │   └── LoginPage.jsx        # Authentication entry point
->>>>>>> ea6714c (Update UI, fix displaybugs of browsing books section:)
+
 │   │   ├── services/
 │   │   │   └── api.js               # Axios instance with base URL and interceptors
 │   │   └── utils/
@@ -349,24 +314,6 @@ final-project/
 │   │   │   ├── authMiddleware.js    # JWT verification and user attachment
 │   │   │   └── roleGuard.js         # Role-based access control enforcement
 │   │   ├── routes/                  # Express router definitions
-<<<<<<< HEAD
-│   │   │   ├── authRoutes.js
-│   │   │   ├── bookRoutes.js
-│   │   │   ├── borrowRoutes.js
-│   │   │   ├── walletRoutes.js
-│   │   │   ├── reservationRoutes.js
-│   │   │   └── userRoutes.js
-│   │   ├── services/                # Business logic layer
-│   │   │   ├── fineService.js       # Overdue day calculation; fine creation logic
-│   │   │   ├── reservationService.js# Queue management and re-indexing
-│   │   │   ├── walletService.js     # Balance deduction and transaction logging
-│   │   │   └── notificationService.js
-│   │   ├── crawlers/                # Metadata enrichment pipeline
-│   │   │   ├── openLibraryCrawler.js
-│   │   │   ├── googleBooksCrawler.js
-│   │   │   ├── vinabookCrawler.js
-│   │   │   └── crawlOrchestrator.js # Merge logic and CrawlLog persistence
-=======
 │   │   │   ├── auth.routes.js       # Auth & login endpoints
 │   │   │   ├── book.routes.js       # Catalogue CRUD endpoints
 │   │   │   ├── borrow.routes.js     # Checkout/return endpoints
@@ -386,7 +333,7 @@ final-project/
 │   │   │   ├── openLibraryCrawler.js# Open Library REST integration
 │   │   │   ├── googleBooksCrawler.js# Google Books REST integration
 │   │   │   └── crawlerUtils.js      # Shared HTTP and parsing utilities
->>>>>>> ea6714c (Update UI, fix displaybugs of browsing books section:)
+
 │   │   └── validators/              # express-validator schema rule definitions
 │   │       ├── bookValidator.js     # ISBN-13 format, required fields
 │   │       └── borrowValidator.js   # Max 3 books, valid IDs
@@ -624,8 +571,5 @@ All UI contributions must comply with the design system documented in [`DESIGN.m
 
 ### ADR-06 — Soft Delete Only
 
-<<<<<<< HEAD
 Books must never be hard-deleted from the database. Always set `is_deleted = true`. This preserves `BorrowItem` and `Fine` referential integrity for historical records.
-=======
-Books must never be hard-deleted from the database. Always set `is_deleted = true`. This preserves `BorrowItem` and `Fine` referential integrity for historical records.
->>>>>>> ea6714c (Update UI, fix displaybugs of browsing books section:)
+
