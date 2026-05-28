@@ -20,15 +20,6 @@ export async function listMy(req, res, next) {
   } catch (err) { next(err); }
 }
 
-export async function pay(req, res, next) {
-  try {
-    const id = parseInt(req.params.id, 10);
-    if (isNaN(id)) return error(res, "Invalid fine id", 400);
-    const fine = await fineService.payFine(id, req.user.id);
-    return success(res, { fine }, "Fine marked as paid");
-  } catch (err) { next(err); }
-}
-
 export async function selfPay(req, res, next) {
   try {
     const id = parseInt(req.params.id, 10);

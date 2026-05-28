@@ -16,10 +16,8 @@ const PAGE_TITLES = {
   "/users/new": "Add Member",
   "/borrows": "Borrows",
   "/borrows/new": "New Borrow",
-  "/fines": "Fines",
-  "/billing": "Billing & Revenue",
-  "/wallet": "My Wallet",
-  "/fines/my": "My Fines",
+  "/fines": "Fines & Billing",
+  "/wallet": "Wallet & Fines",
   "/profile/history": "My History",
   "/reservations": "My Reservations",
   "/logs": "System Logs",
@@ -36,7 +34,6 @@ const ADMIN_NAV = [
   { section: "Transactions", items: [
     { icon: "ti ti-arrow-left-right", label: "Borrows", to: "/borrows" },
     { icon: "ti ti-receipt", label: "Fines", to: "/fines" },
-    { icon: "ti ti-coin", label: "Billing", to: "/billing" },
   ]},
   ];
 
@@ -61,9 +58,8 @@ const READER_NAV = [
     { icon: "ti ti-books", label: "Browse Books", to: "/books" },
   ]},
   { section: "Account", items: [
-    { icon: "ti ti-wallet", label: "My Wallet", to: "/wallet" },
+    { icon: "ti ti-wallet", label: "Wallet & Fines", to: "/wallet" },
     { icon: "ti ti-history", label: "My History", to: "/profile/history" },
-    { icon: "ti ti-receipt", label: "My Fines", to: "/fines/my" },
     { icon: "ti ti-clock", label: "Reservations", to: "/reservations" },
   ]},
 ];

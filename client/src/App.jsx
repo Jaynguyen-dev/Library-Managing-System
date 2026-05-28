@@ -22,7 +22,7 @@ import BorrowFormPage from "./pages/BorrowFormPage";
 import ReturnPage from "./pages/ReturnPage";
 import FineListPage from "./pages/FineListPage";
 import BillingPage from "./pages/BillingPage";
-import WalletPage from "./pages/WalletPage";
+import MyWalletPage from "./pages/MyWalletPage";
 import StudentHistoryPage from "./pages/StudentHistoryPage";
 import MyReservationsPage from "./pages/MyReservationsPage";
 import LandingPage from "./pages/LandingPage";
@@ -93,9 +93,9 @@ function AppRoutes() {
         <Route path="/borrows/new" element={<ProtectedRoute roles={["librarian"]}><AnimatedOutlet><BorrowFormPage /></AnimatedOutlet></ProtectedRoute>} />
         <Route path="/borrows/:id/return" element={<ProtectedRoute roles={["librarian"]}><AnimatedOutlet><ReturnPage /></AnimatedOutlet></ProtectedRoute>} />
         <Route path="/fines" element={<ProtectedRoute roles={["librarian"]}><AnimatedOutlet><FineListPage /></AnimatedOutlet></ProtectedRoute>} />
-        <Route path="/billing" element={<ProtectedRoute roles={["librarian"]}><AnimatedOutlet><BillingPage /></AnimatedOutlet></ProtectedRoute>} />
-        <Route path="/fines/my" element={<ProtectedRoute roles={["user"]}><AnimatedOutlet><FineListPage /></AnimatedOutlet></ProtectedRoute>} />
-        <Route path="/wallet" element={<ProtectedRoute roles={["user"]}><AnimatedOutlet><WalletPage /></AnimatedOutlet></ProtectedRoute>} />
+        <Route path="/billing" element={<Navigate to="/fines" replace />} />
+        <Route path="/wallet" element={<ProtectedRoute roles={["user"]}><AnimatedOutlet><MyWalletPage /></AnimatedOutlet></ProtectedRoute>} />
+        <Route path="/fines/my" element={<Navigate to="/wallet" replace />} />
         <Route path="/profile/history" element={<ProtectedRoute roles={["user"]}><AnimatedOutlet><StudentHistoryPage /></AnimatedOutlet></ProtectedRoute>} />
         <Route path="/reservations" element={<ProtectedRoute roles={["user"]}><AnimatedOutlet><MyReservationsPage /></AnimatedOutlet></ProtectedRoute>} />
         <Route path="/logs" element={<ProtectedRoute roles={["librarian"]}><AnimatedOutlet><LogViewerPage /></AnimatedOutlet></ProtectedRoute>} />

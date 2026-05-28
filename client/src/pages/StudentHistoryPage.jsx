@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import api from "../services/api";
 import { formatDate, formatCurrency } from "../utils/format";
+import { getCoverSources, DEFAULT_COVER } from "../utils/coverUtils";
 
 function statusBadge(status, isOverdue, dueDate) {
   const now = new Date();
@@ -136,7 +137,22 @@ export default function StudentHistoryPage() {
                 const totalFine = b.fines?.reduce((s, f) => s + f.amount, 0) || 0;
                 return (
                   <tr key={b.id}>
-                    <td style={{ fontWeight: 500 }}>{b.items?.map((i) => i.book?.title).join(", ")}</td>
+                    <td style={{ fontWeight: 500, display: "flex", alignItems: "center", gap: 10 }}>
+                      {b.items?.map((i) => {
+                        const src = getCoverSources(i.book)[0] || DEFAULT_COVER;
+                        return (
+                          <div key={i.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <img
+                              src={src}
+                              alt=""
+                              style={{ width: 36, height: 48, borderRadius: 4, objectFit: src === DEFAULT_COVER ? "contain" : "cover", background: "var(--sf-bg-2)", flexShrink: 0 }}
+                              onError={(e) => { e.currentTarget.src = DEFAULT_COVER; e.currentTarget.style.objectFit = "contain"; }}
+                            />
+                            <span>{i.book?.title}</span>
+                          </div>
+                        );
+                      })}
+                    </td>
                     <td style={{ color: "var(--sf-text-2)" }}>{formatDate(b.borrow_date)}</td>
                     <td style={{ color: "var(--sf-text-2)" }}>{formatDate(b.due_date)}</td>
                     <td style={{ color: "var(--sf-text-2)" }}>{b.return_date ? formatDate(b.return_date) : "—"}</td>

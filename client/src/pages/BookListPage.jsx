@@ -177,7 +177,7 @@ export default function BookListPage() {
         <div className="tab-bar">
           <button className={`tab${tab === "all" ? " active" : ""}`} onClick={() => handleTabChange("all")} disabled={loading}>All Books</button>
           <button className={`tab${tab === "available" ? " active" : ""}`} onClick={() => handleTabChange("available")} disabled={loading}>Available</button>
-          <button className={`tab${tab === "borrowed" ? " active" : ""}`} onClick={() => handleTabChange("borrowed")} disabled={loading}>Borrowed</button>
+           <button className={`tab${tab === "borrowed" ? " active" : ""}`} onClick={() => handleTabChange("borrowed")} disabled={loading}>Unavailable</button>
         </div>
         {isStaff && (
           <Link to="/books/new" className="btn btn-primary">

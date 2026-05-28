@@ -171,7 +171,7 @@ async function autoDeductFines() {
               status: "completed",
               payment_method: "system",
               reference: `fine_${fine.id}`,
-              description: `Auto-payment for fine #${fine.id}: ${fine.reason}`,
+              description: "Fine payment",
             },
           });
 

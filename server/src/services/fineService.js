@@ -85,48 +85,6 @@ export async function listMyFines(userId, page, limit) {
   return { ...result, data: result.data.map(recalculateFine) };
 }
 
-export async function payFine(id, paidBy) {
-  const fine = await prisma.fine.findUnique({ where: { id } });
-  if (!fine) throw Object.assign(new Error("Fine not found"), { statusCode: 404 });
-  if (fine.is_paid) throw Object.assign(new Error("Fine already paid"), { statusCode: 400 });
-
-  await walletService.deductFromWallet(
-    fine.user_id,
-    fine.amount,
-    `fine_${fine.id}`,
-    `Payment for fine #${fine.id}: ${fine.reason}`,
-  );
-
-  return prisma.fine.update({
-    where: { id },
-    data: { is_paid: true, paid_at: new Date(), paid_by: paidBy, payment_method: "wallet" },
-    include: {
-      borrow_record: {
-        select: {
-          id: true,
-          borrow_date: true,
-          due_date: true,
-          items: {
-            select: {
-              book: {
-                select: {
-                  id: true,
-                  title: true,
-                  isbn: true,
-                  metadata: {
-                    select: { cover_image_url: true },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-      user: { select: { id: true, full_name: true, email: true } },
-    },
-  });
-}
-
 export async function selfPayFine(fineId, userId) {
   const fine = await prisma.fine.findUnique({ where: { id: fineId } });
   if (!fine) throw Object.assign(new Error("Fine not found"), { statusCode: 404 });
@@ -137,7 +95,7 @@ export async function selfPayFine(fineId, userId) {
     userId,
     fine.amount,
     `fine_${fine.id}`,
-    `Self-payment for fine #${fine.id}: ${fine.reason}`,
+    "Fine payment",
   );
 
   return prisma.fine.update({
