@@ -7,7 +7,7 @@ import { createBorrowValidation } from "../validators/borrowValidator.js";
 const router = Router();
 
 router.post("/", authMiddleware, roleGuard("librarian"), createBorrowValidation, borrowController.create);
-router.post("/self", authMiddleware, borrowController.selfBorrow);
+router.post("/self", authMiddleware, roleGuard("user"), borrowController.selfBorrow);
 router.get("/my", authMiddleware, roleGuard("user"), borrowController.listMy);
 router.get("/", authMiddleware, roleGuard("librarian"), borrowController.list);
 router.get("/:id", authMiddleware, borrowController.getById);

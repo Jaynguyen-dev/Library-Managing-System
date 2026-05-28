@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useAuth } from "../contexts/AuthContext";
+import NotificationPanel from "../components/NotificationPanel";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -219,6 +220,9 @@ export default function MainLayout() {
           >
             {topbarTitle}
           </motion.span>
+          <div style={{ marginLeft: "auto" }}>
+            <NotificationPanel />
+          </div>
         </div>
 
         <div className="content">

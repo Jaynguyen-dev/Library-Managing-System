@@ -132,7 +132,7 @@ export default function BorrowListPage() {
                 className={`tab${statusFilter === s ? " active" : ""}`}
                 onClick={() => handleStatusFilter(s)}
                 disabled={loading}
-              >{s === "return_pending" ? "Pending" : s || "All"}</button>
+              >{s === "return_pending" ? "Pending" : s ? s.charAt(0).toUpperCase() + s.slice(1) : "All"}</button>
             ))}
           </div>
         </div>
@@ -181,7 +181,7 @@ export default function BorrowListPage() {
                         Confirm Return
                       </motion.button>
                     ) : b.status === "active" ? (
-                      <Link to={`/borrows/${b.id}/return`} className="btn btn-ghost btn-sm">Return</Link>
+                      <span style={{ fontSize: "12px", color: "var(--sf-text-2)" }}>In use</span>
                     ) : (
                       <span style={{ fontSize: "12px", color: "var(--sf-text-2)" }}>Closed</span>
                     )}

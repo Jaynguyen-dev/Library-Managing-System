@@ -25,6 +25,7 @@ export async function createBorrow(userId, items) {
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user || !user.is_active) throw Object.assign(new Error("User not found or inactive"), { statusCode: 400 });
+  if (user.role === "librarian") throw Object.assign(new Error("Librarians cannot borrow books"), { statusCode: 403 });
 
   const bookIds = items.map((i) => i.book_id);
   const books = await prisma.book.findMany({ where: { id: { in: bookIds }, is_deleted: false } });
@@ -175,6 +176,7 @@ export async function confirmReturn(borrowId, librarianId) {
 
   if (!borrow) throw Object.assign(new Error("Borrow record not found"), { statusCode: 404 });
   if (borrow.status === "returned") throw Object.assign(new Error("Already returned"), { statusCode: 400 });
+  if (borrow.status !== "return_pending") throw Object.assign(new Error("Reader has not requested a return"), { statusCode: 400 });
 
   const now = new Date();
   const isOverdue = now > borrow.due_date;

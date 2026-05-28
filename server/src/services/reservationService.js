@@ -149,6 +149,11 @@ async function promoteToNotified(reservationId, bookId) {
 }
 
 export async function processReturnAndPromoteQueue(bookId, tx) {
+  const book = await tx.book.findUnique({
+    where: { id: bookId },
+    select: { title: true },
+  });
+
   const nextWaiting = await tx.reservation.findFirst({
     where: { book_id: bookId, status: "waiting" },
     orderBy: { reserved_at: "asc" },
@@ -172,7 +177,7 @@ export async function processReturnAndPromoteQueue(bookId, tx) {
     await notificationService.createNotification(
       nextWaiting.user_id,
       "Book Available",
-      `"${nextWaiting.book?.title || "A reserved book"}" is now available. You reserved this book earlier. Please borrow it within the next ${RESERVATION_WINDOW_HOURS} hours before the reservation expires.`,
+      `"${book?.title || "A reserved book"}" is now available. You reserved this book earlier. Please borrow it within the next ${RESERVATION_WINDOW_HOURS} hours before the reservation expires.`,
       "info",
       `reservation_${nextWaiting.id}`,
     );
