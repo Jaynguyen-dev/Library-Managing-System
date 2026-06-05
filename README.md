@@ -1,9 +1,9 @@
-# 📚 LibraryLMS — Monolithic Library Management System
+# 📚 LibraryLMS — Client-Server Library Management System
 
 > **SE104 — Introduction to Software Engineering**
 > University of Information Technology (UIT)
 >
-> A production-grade, monolithic web application designed to digitize core library operations. Features a **Spotify-inspired dark UI**, a **multi-source metadata enrichment pipeline**, an **integrated digital wallet & payment system**, and **priority-based book reservation queues**.
+> A production-grade, Client-Server web application designed to digitize core library operations. Features a **Spotify-inspired dark UI**, a **multi-source metadata enrichment pipeline**, an **integrated digital wallet & payment system**, and **priority-based book reservation queues**.
 
 ---
 
@@ -24,7 +24,7 @@
 
 ## 🎯 Project Overview
 
-**LibraryLMS** is a full-stack monolithic web application built for the **SE104 (Introduction to Software Engineering)** course at **UIT**. It digitizes the day-to-day operations of a university or community library — covering account management, book catalogue control, borrow/return transactions, automated fine handling, digital wallet top-ups, book reservations, and real-time dashboard analytics.
+**LibraryLMS** is a full-stack Client-Server web application built for the **SE104 (Introduction to Software Engineering)** course at **UIT**. It digitizes the day-to-day operations of a university or community library — covering account management, book catalogue control, borrow/return transactions, automated fine handling, digital wallet top-ups, book reservations, and real-time dashboard analytics.
 
 ### Target Users & Roles
 
@@ -37,7 +37,7 @@
 
 ## 🏗️ System Architecture
 
-The application follows a classic **three-tier monolithic architecture**, tightly integrating the frontend presentation layer, server-side application logic, and relational data persistence into a single deployable unit.
+The application follows a classic **three-tier Client-Server architecture**, tightly integrating the frontend presentation layer, server-side application logic, and relational data persistence into a single deployable unit.
 
 ```mermaid
 graph TD
