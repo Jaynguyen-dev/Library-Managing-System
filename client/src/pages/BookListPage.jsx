@@ -8,6 +8,7 @@ import { useAuth } from "../contexts/AuthContext";
 import BookCard from "../components/BookCard";
 import BorrowModal from "../components/BorrowModal";
 import ReserveModal from "../components/ReserveModal";
+import ConfirmModal from "../components/ConfirmModal";
 import Pagination from "../components/Pagination";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -45,6 +46,7 @@ export default function BookListPage() {
   const [searchInput, setSearchInput] = useState("");
   const [category, setCategory] = useState("All");
   const [deletingId, setDeletingId] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [borrowingBook, setBorrowingBook] = useState(null);
   const [reservingBook, setReservingBook] = useState(null);
   const [userReservations, setUserReservations] = useState({});
@@ -134,12 +136,13 @@ export default function BookListPage() {
       .finally(() => setLoading(false));
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm("Delete this book?")) return;
+  const handleDelete = async (book) => {
+    const id = book.id || book;
     setDeletingId(id);
     try {
       await api.delete(`/api/books/${id}`);
       toast.success("Book deleted");
+      setDeleteTarget(null);
       handlePageChange(page);
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to delete book");
@@ -244,7 +247,7 @@ export default function BookListPage() {
                   key={book.id}
                   book={book}
                   isStaff={isStaff}
-                  onDelete={handleDelete}
+                  onDelete={(book) => setDeleteTarget(book)}
                   deleting={deletingId === book.id}
                   onBorrow={isStaff ? undefined : handleBorrow}
                   onReserve={isStaff ? undefined : handleReserve}
@@ -268,6 +271,17 @@ export default function BookListPage() {
               onReserved={handleReserved}
             />
           )}
+          <ConfirmModal
+            open={deleteTarget !== null}
+            title="Delete Book"
+            message={`Are you sure you want to delete "${deleteTarget?.title || "this book"}"? This action cannot be undone.`}
+            confirmLabel="Delete"
+            cancelLabel="Cancel"
+            icon="ti ti-trash"
+            danger
+            onConfirm={() => handleDelete(deleteTarget)}
+            onCancel={() => setDeleteTarget(null)}
+          />
         </>
       )}
     </div>

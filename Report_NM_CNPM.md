@@ -254,6 +254,10 @@ Màn hình Bảng điều khiển là nơi hiển thị toàn cảnh sức khỏ
 
 Đây là không gian dành cho sự khám phá. Màn hình quản lý sách cho phép hiển thị dữ liệu một cách vô cùng linh hoạt, người dùng có thể chuyển đổi giữa việc xem ở dạng bảng (Table view) cứng nhắc hoặc dạng lưới (Grid view) trực quan bằng một nút bấm trên góc phải. Ở chế độ xem lưới, màn hình trông hệt như một kho nhạc khổng lồ. Các bìa sách đầy màu sắc được kéo về từ internet xếp thành những ô vuông đều đặn trên nền xám tối. Không gian giữa các sách (gap) được thiết kế khá chật để duy trì mật độ thông tin cao. Điểm thú vị là mỗi thẻ sách đều được trang bị hiệu ứng chuyển động mượt mà bằng thư viện Framer Motion. Khi người dùng đưa con trỏ chuột lướt qua một cuốn sách, chiếc thẻ đó sẽ nhẹ nhàng nhô lên cao, kèm theo đó là một hiệu ứng bóng đổ lan tỏa ra xung quanh, tạo ra ảo giác về không gian ba chiều vô cùng sinh động. Cụm thanh tìm kiếm ở phía trên cùng là một trường nhập liệu bo góc viên thuốc dài, chiếm sự chú ý, nơi người dùng có thể gõ bất cứ thông tin nào để lọc kết quả ngay tức thời.
 
+**Luồng Xử lý Thêm Sách Mới (Add Book Flow)**
+![Sơ đồ Luồng Thêm Sách](plot/add_book_flow.png)
+Khi thủ thư thêm sách mới, hệ thống sẽ thực hiện giao dịch (transaction) lưu thông tin văn bản và mã ISBN vào cơ sở dữ liệu. Ảnh bìa tạm thời được để trống để trình duyệt tự động tải ngầm (on-demand) từ Open Library sau này.
+
 **Màn hình Mượn sách (/borrows/new)**
 Màn hình phục vụ nghiệp vụ tạo phiếu mượn này được thiết kế để đảm bảo sự chính xác tuyệt đối. Nó bao gồm hai khu vực làm việc song song. Bên trái là một biểu mẫu tĩnh yêu cầu thủ thư chọn thông tin của sinh viên từ một danh sách thả xuống. Bên phải là một thanh tìm kiếm sách thông minh. Mỗi khi thủ thư tìm và nhấp chọn một cuốn sách, cuốn sách đó sẽ bay vào "giỏ hàng mượn" nằm ở góc dưới màn hình. Giao diện này đặc biệt thông minh ở chỗ nó sẽ hiển thị một thanh tiến trình (Progress bar) cho biết thủ thư đã mượn bao nhiêu cuốn trên tổng giới hạn 3 cuốn. Nếu số lượng sách đạt mức tối đa, toàn bộ khu vực tìm kiếm sẽ bị vô hiệu hóa (disabled) và đổi sang màu xám, trực quan hóa rõ ràng quy định của hệ thống mà không cần người dùng phải đọc thông báo chữ.
 
@@ -368,5 +372,8 @@ Một hệ thống đồ sộ như LibraryLMS là kết quả của sự hợp t
 3.  **React Documentation:** Tài liệu chính thức về React phiên bản 18 (https://react.dev/), tập trung vào các khái niệm về Component Lifecycle, React Hooks và quản lý trạng thái.
 4.  **Express.js và Prisma ORM:** Sách hướng dẫn xây dựng RESTful API với Express.js (https://expressjs.com/) và tài liệu tham chiếu sâu về cách sử dụng Prisma Client cho SQL Server (https://www.prisma.io/).
 5.  **Tailwind CSS:** Hướng dẫn sử dụng khung CSS tiện ích (https://tailwindcss.com/) để xây dựng các bố cục hiển thị phản hồi (Responsive Layouts) một cách nhanh chóng mà không cần viết CSS thuần.
+
+
+
 
 

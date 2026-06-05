@@ -109,7 +109,7 @@ export default function BookCard({ book, isStaff, onDelete, deleting, onBorrow, 
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  if (!deleting) onDelete(book.id);
+                  if (!deleting) onDelete(book);
                 }}
               >
                 <i className={`ti ${deleting ? "ti-loader" : "ti-trash"}`} style={deleting ? { animation: "spin 1s linear infinite" } : undefined}></i>

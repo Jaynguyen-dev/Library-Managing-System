@@ -50,7 +50,7 @@ model BookMetadata {
   description     String?  @db.NText
   publisher       String?
   publish_year    Int?
-  language        String?  @default("vi")
+  language        String?  @default("en")
   subjects        String?
   page_count      Int?
   rating          Float?
@@ -182,18 +182,4 @@ model Reservation {
   @@index([book_id, status])
 }
 
-model CrawlLog {
-  id            Int      @id @default(autoincrement())
-  job_type      String
-  isbn          String?
-  status        String   @default("pending")
-  source        String?
-  books_found   Int      @default(0)
-  books_updated Int      @default(0)
-  error_msg     String?
-  started_at    DateTime @default(now())
-  finished_at   DateTime?
 
-  @@index([status])
-  @@index([started_at])
-}

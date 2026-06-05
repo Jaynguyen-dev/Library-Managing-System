@@ -21,7 +21,6 @@ const PAGE_TITLES = {
   "/wallet": "Wallet & Fines",
   "/profile/history": "My History",
   "/reservations": "My Reservations",
-  "/logs": "System Logs",
 };
 
 const ADMIN_NAV = [

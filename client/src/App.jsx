@@ -26,7 +26,7 @@ import MyWalletPage from "./pages/MyWalletPage";
 import StudentHistoryPage from "./pages/StudentHistoryPage";
 import MyReservationsPage from "./pages/MyReservationsPage";
 import LandingPage from "./pages/LandingPage";
-import LogViewerPage from "./pages/LogViewerPage";
+
 
 function AnimatedOutlet({ children }) {
   const location = useLocation();
@@ -98,7 +98,6 @@ function AppRoutes() {
         <Route path="/fines/my" element={<Navigate to="/wallet" replace />} />
         <Route path="/profile/history" element={<ProtectedRoute roles={["user"]}><AnimatedOutlet><StudentHistoryPage /></AnimatedOutlet></ProtectedRoute>} />
         <Route path="/reservations" element={<ProtectedRoute roles={["user"]}><AnimatedOutlet><MyReservationsPage /></AnimatedOutlet></ProtectedRoute>} />
-        <Route path="/logs" element={<ProtectedRoute roles={["librarian"]}><AnimatedOutlet><LogViewerPage /></AnimatedOutlet></ProtectedRoute>} />
         <Route path="/" element={<LandingPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/login" replace />} />

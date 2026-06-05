@@ -24,7 +24,10 @@ export default function BookFormPage() {
     }
   }, [id, isEdit, navigate]);
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    const val = e.target.value;
+    setForm({ ...form, [e.target.name]: e.target.name === "total_quantity" ? Number(val) : val });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,7 +42,6 @@ export default function BookFormPage() {
         await api.put(`/api/books/${id}`, form);
       } else {
         await api.post("/api/books", form);
-        api.post(`/api/crawl/isbn/${form.isbn}`).catch(() => {});
       }
       toast.success(isEdit ? "Book updated" : "Book created");
       navigate("/books");

@@ -17,16 +17,4 @@ export async function batchEnrich(req, res, next) {
   } catch (err) { next(err); }
 }
 
-export async function getLogs(req, res, next) {
-  try {
-    const logs = await crawlService.getLogs();
-    return success(res, { logs });
-  } catch (err) { next(err); }
-}
 
-export async function deleteLogs(req, res, next) {
-  try {
-    const result = await crawlService.deleteOldLogs();
-    return success(res, result, "Old logs cleaned");
-  } catch (err) { next(err); }
-}
