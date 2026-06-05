@@ -1,0 +1,91 @@
+erDiagram
+    User {
+        Int id PK
+        String full_name
+        String email UK
+        String password_hash
+        String role
+        Boolean is_active
+        DateTime created_at
+    }
+    Book {
+        Int id PK
+        String title
+        String author
+        String isbn UK
+        String category
+        Int total_quantity
+        Int available_quantity
+        Boolean is_deleted
+    }
+    BookMetadata {
+        Int id PK
+        Int book_id FK
+        String cover_image_url
+        String publisher
+        Int publish_year
+    }
+    BorrowRecord {
+        Int id PK
+        Int user_id FK
+        DateTime borrow_date
+        DateTime due_date
+        DateTime return_date
+        String status
+    }
+    BorrowItem {
+        Int id PK
+        Int borrow_record_id FK
+        Int book_id FK
+        Int quantity
+    }
+    Fine {
+        Int id PK
+        Int borrow_record_id FK
+        Int user_id FK
+        Int amount
+        String reason
+        Boolean is_paid
+    }
+    Wallet {
+        Int id PK
+        Int user_id FK
+        Int balance
+        DateTime created_at
+    }
+    WalletTransaction {
+        Int id PK
+        Int wallet_id FK
+        Int amount
+        String type
+        String status
+        DateTime created_at
+    }
+    FinePayment {
+        Int id PK
+        Int fine_id FK
+        Int wallet_id FK
+        Int amount
+        DateTime created_at
+    }
+    Reservation {
+        Int id PK
+        Int user_id FK
+        Int book_id FK
+        String status
+        Int queue_position
+        DateTime reserved_at
+    }
+
+    User ||--|| Wallet : has
+    User ||--o{ BorrowRecord : creates
+    User ||--o{ Fine : incurs
+    User ||--o{ Reservation : makes
+    BorrowRecord ||--|{ BorrowItem : contains
+    BorrowRecord ||--o{ Fine : generates
+    Book ||--o{ BorrowItem : included_in
+    Book ||--|| BookMetadata : described_by
+    Book ||--o{ Reservation : has
+    Wallet ||--o{ WalletTransaction : logs
+    Wallet ||--o{ FinePayment : funds
+    Fine ||--o{ FinePayment : settled_by

@@ -1,0 +1,144 @@
+---
+title: LibraryLMS Business Function Diagram
+---
+flowchart TB
+    classDef actor fill:#2563eb,color:#fff,stroke:#1d4ed8,stroke-width:2px
+    classDef domain fill:#f8fafc,stroke:#64748b,stroke-width:2px
+    classDef function fill:#eff6ff,stroke:#3b82f6,stroke-width:1px
+    classDef sub fill:#f0fdf4,stroke:#22c55e,stroke-width:1px
+    classDef flow fill:#fef2f2,stroke:#ef4444,stroke-width:2px
+    classDef storage fill:#f5f3ff,stroke:#8b5cf6,stroke-width:2px
+
+    subgraph Actors["External Actors"]
+        Reader(("&#128100; Reader")):::actor
+        Librarian(("&#128100; Librarian")):::actor
+        Cron(("&#9200; System Scheduler")):::actor
+    end
+
+    subgraph Identity["1. Identity and Access Management"]
+        direction TB
+        A1[Register / Login]:::function
+        A2[JWT Authentication]:::function
+        A3[Role-Based Guard]:::function
+        A4[Account Management]:::function
+    end
+
+    subgraph Catalog["2. Catalog Management"]
+        direction TB
+        C1[Book CRUD Operations]:::function
+        C2[Search, Filter and Paginate]:::function
+        C3[Category System]:::function
+        C4[Inventory Tracking]:::function
+        C5[Metadata Enrichment Crawler]:::function
+    end
+
+    subgraph Circulation["3. Circulation Management"]
+        direction TB
+        BR1[Multi-Book Checkout]:::function
+        BR2[Return Request by Reader]:::function
+        BR3[Return Confirmation by Librarian]:::function
+        BR4[30-Day Loan Period]:::function
+        BR5[Reservation Queue System]:::function
+    end
+
+    subgraph Financial["4. Financial Management"]
+        direction TB
+        W1[Digital Wallet]:::function
+        W2[Top-Up via Payment Gateways]:::function
+        W3[Fine Calculation 2000 VND/day]:::function
+        W4[Fine Payment and Deduction]:::function
+        W5[Transaction Audit Ledger]:::function
+    end
+
+    subgraph Insights["5. Insights and Communication"]
+        direction TB
+        D1[Librarian Analytics Dashboard]:::function
+        D2[Reader Dashboard and Insights]:::function
+        N1[Notification System]:::function
+        N2[In-App Alerts and Reminders]:::function
+    end
+
+    subgraph Scheduler["6. Background Automation"]
+        direction TB
+        S1[Daily Due-Soon Reminders 8AM]:::function
+        S2[Midnight Overdue Processing]:::function
+        S3[Auto-Deduct Wallet Fines 2:30AM]:::function
+        S4[Reservation Expiry Checker 30min]:::function
+    end
+
+    subgraph Storage["Core Data Entities"]
+        DB1[(Users and Roles)]:::storage
+        DB2[(Books and Metadata)]:::storage
+        DB3[(Borrow Records, Items)]:::storage
+        DB4[(Wallets, Transactions, Fines)]:::storage
+        DB5[(Reservations, Notifications)]:::storage
+    end
+
+    Reader --> A1
+    Reader --> C2
+    Reader --> BR1
+    Reader --> BR2
+    Reader --> W1
+    Reader --> W2
+    Reader --> W4
+    Reader --> BR5
+    Reader --> D2
+    Reader --> N1
+
+    Librarian --> A3
+    Librarian --> A4
+    Librarian --> C1
+    Librarian --> C2
+    Librarian --> C4
+    Librarian --> C5
+    Librarian --> BR3
+    Librarian --> D1
+    Librarian --> N1
+
+    Cron --> S1
+    Cron --> S2
+    Cron --> S3
+    Cron --> S4
+
+    A1 --> A2
+    A2 --> A3
+    A3 --> C1
+    A3 --> BR1
+    A3 --> D1
+    A3 --> W1
+
+    C1 --> C5
+    C5 --> C4
+    C4 --> BR1
+
+    BR1 --> BR2
+    BR2 --> BR3
+    BR4 --> W3
+    BR3 --> W3
+    W3 --> W4
+    W4 --> W5
+    BR3 --> BR5
+    BR5 --> N2
+
+    S4 --> BR5
+    S1 --> N2
+    S2 --> W3
+    S3 --> W4
+
+    C1 --> DB2
+    BR1 --> DB3
+    BR1 --> DB2
+    W4 --> DB4
+    A4 --> DB1
+    BR5 --> DB5
+    N2 --> DB5
+
+    D1 --> DB1
+    D1 --> DB2
+    D1 --> DB3
+    D1 --> DB4
+    D1 --> DB5
+    D2 --> DB2
+    D2 --> DB3
+    D2 --> DB4
+    D2 --> DB5

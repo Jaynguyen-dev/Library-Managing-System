@@ -15,6 +15,12 @@
     "studio": "cd server && npx prisma studio"
   },
   "devDependencies": {
-    "concurrently": "^9.0.0"
+    "concurrently": "^9.0.0",
+    "marked": "^18.0.4",
+    "puppeteer": "^25.1.0"
+  },
+  "dependencies": {
+    "@mermaid-js/mermaid-cli": "^11.15.0",
+    "plantuml-encoder": "^1.4.0"
   }
 }

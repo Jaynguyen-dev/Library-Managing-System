@@ -772,6 +772,39 @@ select.form-input {
 
 /* ─── LOGIN PAGE ─── */
 
+.login-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--sf-bg);
+}
+
+.login-card {
+  background: var(--sf-card);
+  border-radius: 18px;
+  border: 0.5px solid var(--sf-border);
+  padding: 40px 36px;
+  width: 380px;
+  text-align: center;
+}
+
+.login-logo {
+  width: 56px;
+  height: 56px;
+  background: var(--sf-accent);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.login-logo i {
+  font-size: 28px;
+  color: #fff;
+}
+
 .login-page {
   display: flex;
   min-height: 100vh;

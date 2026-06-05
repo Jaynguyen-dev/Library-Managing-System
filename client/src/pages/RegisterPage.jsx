@@ -84,14 +84,7 @@ export default function RegisterPage() {
         >
           <i className="ti ti-user-plus" aria-hidden="true"></i>
         </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
-        >
-          <div className="login-title">Create Account</div>
-          <div className="login-sub">Create a new account</div>
-        </motion.div>
+
         <form onSubmit={handleSubmit}>
           {error && (
             <motion.div

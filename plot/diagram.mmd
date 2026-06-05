@@ -1,0 +1,79 @@
+flowchart TD
+    %% Define styles
+    classDef frontend fill:#f9f9f9,stroke:#333,stroke-width:2px;
+    classDef gateway fill:#fcf3cf,stroke:#f1c40f,stroke-width:2px;
+    classDef service fill:#d5f5e3,stroke:#2ecc71,stroke-width:2px;
+    classDef crawler fill:#f5b041,stroke:#e67e22,stroke-width:2px,color:#fff;
+    classDef database fill:#ebdef0,stroke:#8e44ad,stroke-width:2px;
+    classDef external fill:#d2b4de,stroke:#9b59b6,stroke-width:2px;
+
+    subgraph Frontend [Frontend React SPA]
+        UI_Auth[Authentication UI <br> Login / Register]:::frontend
+        UI_Dashboard[Dashboard UI]:::frontend
+        UI_Books[Catalogue & Book UI]:::frontend
+        UI_Borrows[Borrow & Return UI]:::frontend
+        UI_Users[User Management UI]:::frontend
+    end
+
+    subgraph Backend [Backend API Express.js]
+        API_Gateway{API Gateway & <br> Auth Middleware}:::gateway
+
+        subgraph Services [Business Logic Services]
+            S_Auth(Auth Service <br> JWT / Bcrypt):::service
+            S_Dashboard(Dashboard Service <br> Analytics):::service
+            S_Books(Book Management Service <br> CRUD / Availability):::service
+            S_Borrows(Borrow & Return Service <br> Transactions):::service
+            S_Fines(Fine Management Service <br> Auto Calc):::service
+            S_Users(User Management Service <br> Roles / CRUD):::service
+            S_Crawl(Data Ingestion Service <br> Web Crawling):::crawler
+        end
+    end
+
+    subgraph DataLayer [Data Layer Prisma & MSSQL]
+        DB_Users[(Users Table)]:::database
+        DB_Books[(Books & Metadata <br> Tables)]:::database
+        DB_Borrows[(Borrow Records & <br> Items)]:::database
+        DB_Fines[(Fines Table)]:::database
+        DB_Crawl[(Crawl Logs)]:::database
+    end
+
+    subgraph ExternalSources [External APIs]
+        Ext_APIs((Open Library / <br> Google Books)):::external
+    end
+
+    %% Flows Frontend -> Gateway
+    UI_Auth -->|REST| API_Gateway
+    UI_Dashboard -->|REST| API_Gateway
+    UI_Books -->|REST| API_Gateway
+    UI_Borrows -->|REST| API_Gateway
+    UI_Users -->|REST| API_Gateway
+
+    %% Flows Gateway -> Services
+    API_Gateway -->|/api/auth| S_Auth
+    API_Gateway -->|/api/dashboard| S_Dashboard
+    API_Gateway -->|/api/books| S_Books
+    API_Gateway -->|/api/borrows| S_Borrows
+    API_Gateway -->|/api/fines| S_Fines
+    API_Gateway -->|/api/users| S_Users
+    API_Gateway -->|/api/crawl| S_Crawl
+
+    %% Internal Service Flows
+    S_Borrows -.->|triggers calculation| S_Fines
+    S_Borrows -.->|updates quantity| S_Books
+
+    %% Flow Services -> Database
+    S_Auth -->|Read / Write| DB_Users
+    S_Users -->|Read / Write| DB_Users
+    S_Books -->|Read / Write| DB_Books
+    S_Borrows -->|Read / Write| DB_Borrows
+    S_Fines -->|Read / Write| DB_Fines
+    S_Dashboard -->|Aggregate Read| DB_Users
+    S_Dashboard -->|Aggregate Read| DB_Books
+    S_Dashboard -->|Aggregate Read| DB_Borrows
+    S_Dashboard -->|Aggregate Read| DB_Fines
+    
+    S_Crawl -->|Upsert Metadata| DB_Books
+    S_Crawl -->|Log Status| DB_Crawl
+
+    %% Flow External
+    S_Crawl <-->|HTTP GET| Ext_APIs

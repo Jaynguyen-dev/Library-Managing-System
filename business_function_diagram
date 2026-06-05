@@ -1,0 +1,75 @@
+digraph BusinessFunctionDiagram {
+	dpi=300 nodesep=0.8 rankdir=LR ranksep=1.2 size="12,8" splines=ortho
+	node [fillcolor=lightblue fontname=Helvetica fontsize=14 shape=box style="rounded,filled"]
+	edge [color=gray30 fontname=Helvetica fontsize=12]
+	subgraph cluster_frontend {
+		color=lightgrey fillcolor=whitesmoke fontname="Helvetica-Bold" fontsize=16 label="Frontend (React SPA)" style=filled
+		UI_Auth [label="Authentication UI
+(Login/Register)"]
+		UI_Dashboard [label="Dashboard UI"]
+		UI_Books [label="Catalogue & Book UI"]
+		UI_Borrows [label="Borrow & Return UI"]
+		UI_Users [label="User Management UI"]
+	}
+	subgraph cluster_backend {
+		color=lightgrey fillcolor="#e8f4f8" fontname="Helvetica-Bold" fontsize=16 label="Backend API (Express.js)" style=filled
+		API_Gateway [label="API Gateway / Routes
+& Auth Middleware" fillcolor="#fcf3cf" shape=hexagon]
+		subgraph cluster_services {
+			color=gray fillcolor=none label="Business Logic Services" style=dashed
+			S_Auth [label="Auth Service
+(JWT, Bcrypt)" fillcolor="#d5f5e3"]
+			S_Dashboard [label="Dashboard Service
+(Analytics, Stats)" fillcolor="#d5f5e3"]
+			S_Books [label="Book Management Service
+(CRUD, Availability)" fillcolor="#d5f5e3"]
+			S_Borrows [label="Borrow & Return Service
+(Transactions)" fillcolor="#d5f5e3"]
+			S_Fines [label="Fine Management Service
+(Auto Calc)" fillcolor="#d5f5e3"]
+			S_Users [label="User Management Service
+(CRUD, Roles)" fillcolor="#d5f5e3"]
+			S_Crawl [label="Data Ingestion Service
+(Web Crawling)" fillcolor="#f5b041" fontcolor=white]
+		}
+	}
+	subgraph cluster_db {
+		color=lightgrey fillcolor="#fdedec" fontname="Helvetica-Bold" fontsize=16 label="Data Layer (Prisma & MSSQL)" style=filled
+		DB_Users [label="Users Table" fillcolor=white shape=cylinder]
+		DB_Books [label="Books & Metadata Tables" fillcolor=white shape=cylinder]
+		DB_Borrows [label="Borrow Records & Items" fillcolor=white shape=cylinder]
+		DB_Fines [label="Fines Table" fillcolor=white shape=cylinder]
+		DB_Crawl [label="Crawl Logs" fillcolor=white shape=cylinder]
+	}
+	subgraph cluster_external {
+		color=none label="External Data Sources" style=filled
+		Ext_APIs [label="Open Library /
+Google Books API" fillcolor="#d2b4de" shape=ellipse]
+	}
+	UI_Auth -> API_Gateway [label=" REST / JSON"]
+	UI_Dashboard -> API_Gateway
+	UI_Books -> API_Gateway
+	UI_Borrows -> API_Gateway
+	UI_Users -> API_Gateway
+	API_Gateway -> S_Auth [label=" /api/auth"]
+	API_Gateway -> S_Dashboard [label=" /api/dashboard"]
+	API_Gateway -> S_Books [label=" /api/books"]
+	API_Gateway -> S_Borrows [label=" /api/borrows
+/api/fines"]
+	API_Gateway -> S_Users [label=" /api/users"]
+	API_Gateway -> S_Crawl [label=" /api/crawl"]
+	S_Borrows -> S_Fines [label=" triggers calculation" style=dotted]
+	S_Borrows -> S_Books [label=" updates quantity" style=dotted]
+	S_Auth -> DB_Users [label=" Read/Write"]
+	S_Users -> DB_Users [label=" Read/Write"]
+	S_Books -> DB_Books [label=" Read/Write"]
+	S_Borrows -> DB_Borrows [label=" Read/Write"]
+	S_Fines -> DB_Fines [label=" Read/Write"]
+	S_Dashboard -> DB_Users [label=" Read"]
+	S_Dashboard -> DB_Books [label=" Read"]
+	S_Dashboard -> DB_Borrows [label=" Read"]
+	S_Dashboard -> DB_Fines [label=" Read"]
+	S_Crawl -> DB_Books [label=" Upsert Metadata"]
+	S_Crawl -> DB_Crawl [label=" Log Status"]
+	S_Crawl -> Ext_APIs [label=" HTTP GET" dir=both]
+}

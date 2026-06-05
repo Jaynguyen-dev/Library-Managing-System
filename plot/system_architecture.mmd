@@ -1,0 +1,55 @@
+%%{init: {"theme": "base", "themeVariables": { "fontSize": "22px", "fontFamily": "Arial"}}}%%
+flowchart TD
+    classDef client fill:#ebf5fb,stroke:#2980b9,stroke-width:2px,color:#2c3e50,font-weight:bold;
+    classDef api fill:#f4ecf7,stroke:#8e44ad,stroke-width:2px,color:#512e5f,font-weight:bold;
+    classDef module fill:#eafaf1,stroke:#27ae60,stroke-width:2px,color:#145a32;
+    classDef bgjob fill:#fdedec,stroke:#c0392b,stroke-width:2px,color:#78281f;
+    classDef orm fill:#fef5e7,stroke:#d35400,stroke-width:2px,color:#7e5109,font-weight:bold;
+    classDef db fill:#fef9e7,stroke:#f1c40f,stroke-width:3px,color:#7d6608,font-weight:bold;
+    classDef ext fill:#f2f4f4,stroke:#7f8c8d,stroke-width:2px,color:#2c3e50;
+    classDef label fill:#f5eef8,stroke:#d2b4de,stroke-width:1px,color:#512e5f;
+
+    subgraph ClientLayer ["1. Tầng Khách (Client) - Giao diện React SPA"]
+        direction LR
+        WebApp["fa:fa-search Ứng dụng Độc giả<br/>(Tìm sách, Mượn sách, Ví)"]:::client
+        AdminApp["fa:fa-shield-alt Bảng Quản trị Admin<br/>(Quản lý sách, Thống kê)"]:::client
+    end
+
+    L1["Yêu cầu HTTP/REST"]:::label
+
+    subgraph ServerLayer ["2. Tầng Chủ (Server) - Máy chủ Node.js / Express"]
+        direction TB
+        API["fa:fa-cog Tầng Giao tiếp API RESTful<br/>(Định tuyến & Xác thực JWT)"]:::api
+        
+        subgraph LogicLayer ["Khối Xử lý Nghiệp vụ (Business Logic)"]
+            direction TB
+            M1["fa:fa-users Quản lý Người dùng"]:::module
+            M2["fa:fa-book Quản lý Danh mục Sách"]:::module
+            M3["fa:fa-book-open Luồng Mượn / Trả Sách"]:::module
+            M4["fa:fa-users Hàng đợi Đặt trước"]:::module
+            M5["fa:fa-microchip Ví Điện tử Nội bộ"]:::module
+            M6["fa:fa-dollar-sign Quản lý Phí Phạt"]:::module
+        end
+        
+        Jobs["Các Tác vụ Nền Tự động (Background Cron Jobs)<br/><br/>- Cập nhật tiền phạt trễ hạn mỗi 00:00<br/>- Thu thập ảnh bìa/thông tin sách từ Internet"]:::bgjob
+
+        ORM["fa:fa-database Tầng Truy cập Dữ liệu - Prisma ORM<br/>(Object-Relational Mapping & Transactions)"]:::orm
+
+        API --> LogicLayer
+        API --> Jobs
+        LogicLayer --> ORM
+        Jobs --> ORM
+    end
+
+    L3["Truy vấn SQL (Read/Write)"]:::label
+    L4["HTTP GET (Ngầm)"]:::label
+
+    subgraph ExternalLayer ["3. Tầng Dữ liệu & Dịch vụ Bên ngoài"]
+        direction LR
+        DB[("fa:fa-database Cơ sở Dữ liệu (Database)<br/>Microsoft SQL Server")]:::db
+        Ext["Dịch vụ Bên ngoài<br/>Open Library / Google Books API"]:::ext
+    end
+
+    ClientLayer --> L1 --> API
+    ORM --> L3 --> DB
+    Jobs -.-> L4 -.-> Ext

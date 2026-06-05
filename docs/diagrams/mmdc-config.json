@@ -1,0 +1,17 @@
+{
+  "theme": "default",
+  "themeVariables": {
+    "fontSize": "16px",
+    "primaryFontSize": "18px",
+    "titleFontSize": "22px",
+    "defaultFontSize": "16px"
+  },
+  "flowchart": {
+    "htmlLabels": true,
+    "curve": "basis",
+    "padding": 20,
+    "nodeSpacing": 60,
+    "rankSpacing": 80,
+    "useMaxWidth": false
+  }
+}

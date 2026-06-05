@@ -1,0 +1,1009 @@
+@startuml LibraryLMS_ClassDiagram
+skinparam defaultTextAlignment left
+skinparam style strictuml
+skinparam backgroundColor White
+skinparam handwritten false
+skinparam monochrome true
+
+skinparam class {
+  BorderColor Black
+  BackgroundColor White
+  HeaderBackgroundColor White
+  FontColor Black
+  AttributeFontColor Black
+  FontSize 11
+  AttributeFontSize 10
+  FontStyle plain
+  BorderThickness 1
+}
+
+skinparam package {
+  BorderColor Black
+  BackgroundColor White
+  FontColor Black
+  FontSize 12
+  FontStyle bold
+  BorderThickness 1
+}
+
+skinparam arrow {
+  Color Black
+  FontColor Black
+  FontSize 10
+  Thickness 1
+}
+
+skinparam note {
+  BackgroundColor White
+  BorderColor Black
+  FontSize 10
+}
+
+' ============================================================================
+' PACKAGE: Data Layer — Database Models (Prisma ORM)
+' ============================================================================
+package "Data Layer — Database Models" as DB {
+
+  class User << (D,white) >> {
+    + id : Int
+    + full_name : String
+    + email : String
+    - password_hash : String
+    + role : String
+    + is_active : Boolean
+    + created_at : DateTime
+    --
+    + borrows : BorrowRecord[]
+    + fines : Fine[]
+    + wallet : Wallet?
+    + reservations : Reservation[]
+  }
+
+  class Book << (D,white) >> {
+    + id : Int
+    + title : String
+    + author : String
+    + isbn : String
+    + category : String
+    + total_quantity : Int
+    + available_quantity : Int
+    + is_deleted : Boolean
+    + reserved_for_user_id : Int?
+    + reservation_expires_at : DateTime?
+    + created_at : DateTime
+    + updated_at : DateTime
+    --
+    + borrow_items : BorrowItem[]
+    + metadata : BookMetadata?
+    + reservations : Reservation[]
+  }
+
+  class BookMetadata << (D,white) >> {
+    + id : Int
+    + book_id : Int
+    + cover_image_url : String?
+    + description : String?
+    + publisher : String?
+    + publish_year : Int?
+    + language : String?
+    + subjects : String?
+    + page_count : Int?
+    + rating : Float?
+    + source_url : String?
+    + crawled_at : DateTime?
+  }
+
+  class BorrowRecord << (D,white) >> {
+    + id : Int
+    + user_id : Int
+    + borrow_date : DateTime
+    + due_date : DateTime
+    + return_date : DateTime?
+    + return_requested_at : DateTime?
+    + confirmed_by : Int?
+    + status : String
+    + reminder_sent : Boolean
+    + reminder_sent_at : DateTime?
+    --
+    + items : BorrowItem[]
+    + fines : Fine[]
+  }
+
+  class BorrowItem << (D,white) >> {
+    + id : Int
+    + borrow_record_id : Int
+    + book_id : Int
+    + quantity : Int
+  }
+
+  class Fine << (D,white) >> {
+    + id : Int
+    + borrow_record_id : Int
+    + user_id : Int
+    + amount : Int
+    + reason : String
+    + is_paid : Boolean
+    + paid_at : DateTime?
+    + paid_by : Int?
+    + payment_method : String?
+    + overdue_days : Int?
+    + created_at : DateTime
+    --
+    + payments : FinePayment[]
+  }
+
+  class Wallet << (D,white) >> {
+    + id : Int
+    + user_id : Int
+    + balance : Int
+    + created_at : DateTime
+    + updated_at : DateTime
+    --
+    + transactions : WalletTransaction[]
+    + fine_payments : FinePayment[]
+  }
+
+  class WalletTransaction << (D,white) >> {
+    + id : Int
+    + wallet_id : Int
+    + amount : Int
+    + balance_before : Int?
+    + balance_after : Int?
+    + type : String
+    + status : String
+    + payment_method : String?
+    + reference : String?
+    + description : String?
+    + created_at : DateTime
+  }
+
+  class FinePayment << (D,white) >> {
+    + id : Int
+    + fine_id : Int
+    + wallet_id : Int
+    + amount : Int
+    + created_at : DateTime
+  }
+
+  class Notification << (D,white) >> {
+    + id : Int
+    + user_id : Int
+    + title : String
+    + message : String
+    + type : String
+    + is_read : Boolean
+    + reference : String?
+    + created_at : DateTime
+  }
+
+  class Reservation << (D,white) >> {
+    + id : Int
+    + user_id : Int
+    + book_id : Int
+    + status : String
+    + queue_position : Int?
+    + reserved_at : DateTime
+    + notified_at : DateTime?
+    + expires_at : DateTime?
+    + completed_at : DateTime?
+    + cancelled_at : DateTime?
+  }
+
+  class CrawlLog << (D,white) >> {
+    + id : Int
+    + job_type : String
+    + isbn : String?
+    + status : String
+    + source : String?
+    + books_found : Int
+    + books_updated : Int
+    + error_msg : String?
+    + started_at : DateTime
+    + finished_at : DateTime?
+  }
+}
+
+' ============================================================================
+' PACKAGE: Configuration Layer
+' ============================================================================
+package "Configuration Layer" as CFG {
+
+  class ENV {
+    + NODE_ENV : String
+    + PORT : Int
+    + JWT_SECRET : String
+    + CLIENT_URL : String
+    + DATABASE_URL : String
+    + GOOGLE_BOOKS_API_KEY : String
+    + CRAWL_CONCURRENCY : Int
+    + CRAWL_DELAY_MS : Int
+  }
+
+  class PrismaDB {
+    + {static} prisma : PrismaClient
+  }
+}
+
+' ============================================================================
+' PACKAGE: Server — Controllers
+' ============================================================================
+package "Server — Controllers" as CTRL {
+
+  class AuthController {
+    + {static} register(req, res, next) : Promise
+    + {static} login(req, res, next) : Promise
+    + {static} getMe(req, res, next) : Promise
+  }
+
+  class BookController {
+    + {static} list(req, res, next) : Promise
+    + {static} getById(req, res, next) : Promise
+    + {static} create(req, res, next) : Promise
+    + {static} update(req, res, next) : Promise
+    + {static} remove(req, res, next) : Promise
+  }
+
+  class BorrowController {
+    + {static} create(req, res, next) : Promise
+    + {static} selfBorrow(req, res, next) : Promise
+    + {static} list(req, res, next) : Promise
+    + {static} getById(req, res, next) : Promise
+    + {static} listMy(req, res, next) : Promise
+    + {static} requestReturn(req, res, next) : Promise
+    + {static} confirmReturn(req, res, next) : Promise
+  }
+
+  class FineController {
+    + {static} list(req, res, next) : Promise
+    + {static} listMy(req, res, next) : Promise
+    + {static} selfPay(req, res, next) : Promise
+    + {static} revenue(req, res, next) : Promise
+  }
+
+  class DashboardController {
+    + {static} summary(req, res, next) : Promise
+    + {static} mySummary(req, res, next) : Promise
+  }
+
+  class UserController {
+    + {static} list(req, res, next) : Promise
+    + {static} create(req, res, next) : Promise
+    + {static} update(req, res, next) : Promise
+    + {static} toggleActive(req, res, next) : Promise
+  }
+
+  class WalletController {
+    + {static} get(req, res, next) : Promise
+    + {static} addCredits(req, res, next) : Promise
+    + {static} transactions(req, res, next) : Promise
+  }
+
+  class CrawlController {
+    + {static} enrichByIsbn(req, res, next) : Promise
+    + {static} batchEnrich(req, res, next) : Promise
+    + {static} getLogs(req, res, next) : Promise
+    + {static} deleteLogs(req, res, next) : Promise
+  }
+
+  class ReservationController {
+    + {static} create(req, res, next) : Promise
+    + {static} listMy(req, res, next) : Promise
+    + {static} listQueue(req, res, next) : Promise
+    + {static} cancel(req, res, next) : Promise
+    + {static} stats(req, res, next) : Promise
+  }
+
+  class NotificationController {
+    + {static} list(req, res, next) : Promise
+    + {static} unreadCount(req, res, next) : Promise
+    + {static} markRead(req, res, next) : Promise
+    + {static} markAllRead(req, res, next) : Promise
+    + {static} remove(req, res, next) : Promise
+  }
+}
+
+' ============================================================================
+' PACKAGE: Server — Services (Business Logic)
+' ============================================================================
+package "Server — Services" as SVC {
+
+  class AuthService {
+    + {static} register(fullName, email, password) : Promise<User>
+    + {static} login(email, password) : Promise<{token, user}>
+    + {static} getMe(userId) : Promise<User>
+  }
+
+  class BookService {
+    + {static} listBooks(search, page, limit, available, category) : Promise<PageResult>
+    + {static} getBook(id) : Promise<Book>
+    + {static} createBook(data) : Promise<Book>
+    + {static} updateBook(id, data) : Promise<Book>
+    + {static} softDeleteBook(id) : Promise<Book>
+  }
+
+  class BorrowService {
+    + {static} createBorrow(userId, items) : Promise<BorrowRecord>
+    + {static} listBorrows(status, page, limit) : Promise<PageResult>
+    + {static} getBorrowById(id) : Promise<BorrowRecord>
+    + {static} listMyBorrows(userId, status) : Promise<BorrowRecord[]>
+    + {static} requestReturn(borrowId, userId) : Promise<BorrowRecord>
+    + {static} confirmReturn(borrowId, librarianId) : Promise<BorrowRecord>
+  }
+
+  class FineService {
+    + {static} listFines(isPaid, page, limit) : Promise<PageResult>
+    + {static} listMyFines(userId, page, limit) : Promise<PageResult>
+    + {static} selfPayFine(fineId, userId) : Promise<Fine>
+    + {static} getRevenueSummary() : Promise<Object>
+  }
+
+  class DashboardService {
+    + {static} getSummary() : Promise<Object>
+    + {static} getMySummary(userId) : Promise<Object>
+  }
+
+  class UserService {
+    + {static} listUsers(role, page, limit) : Promise<PageResult>
+    + {static} createUser(data) : Promise<User>
+    + {static} updateUser(id, data) : Promise<User>
+    + {static} toggleActive(id) : Promise<User>
+  }
+
+  class WalletService {
+    + {static} getOrCreateWallet(userId) : Promise<Wallet>
+    + {static} getWallet(userId) : Promise<Wallet>
+    + {static} addCredits(userId, amount, paymentMethod) : Promise<Wallet>
+    + {static} deductFromWallet(userId, amount, reference, description) : Promise<Wallet>
+    + {static} getTransactions(userId, page, limit) : Promise<Object>
+  }
+
+  class CrawlService {
+    + {static} enrichByIsbn(isbn) : Promise<Object>
+    + {static} batchEnrich() : Promise<Object>
+    + {static} getLogs() : Promise<CrawlLog[]>
+    + {static} deleteOldLogs() : Promise<Object>
+  }
+
+  class ReservationService {
+    + {static} createReservation(userId, bookId) : Promise<Reservation>
+    + {static} getMyReservations(userId) : Promise<Reservation[]>
+    + {static} getQueueForBook(bookId) : Promise<Reservation[]>
+    + {static} cancelReservation(reservationId, userId) : Promise<Object>
+    + {static} processReturnAndPromoteQueue(bookId, tx) : Promise
+    + {static} processExpiredReservations() : Promise<Int>
+    + {static} getActiveReservationForUser(userId, bookId) : Promise<Reservation?>
+    + {static} getReservationStats() : Promise<Object>
+  }
+
+  class NotificationService {
+    + {static} createNotification(userId, title, message, type, reference) : Promise<Notification>
+    + {static} listNotifications(userId, page, limit) : Promise<Object>
+    + {static} markAsRead(notificationId, userId) : Promise<Notification>
+    + {static} markAllAsRead(userId) : Promise
+    + {static} getUnreadCount(userId) : Promise<Int>
+    + {static} deleteNotification(notificationId, userId) : Promise
+  }
+
+  class SchedulerService {
+    + {static} startScheduler() : void
+  }
+}
+
+' ============================================================================
+' PACKAGE: Server — Middlewares
+' ============================================================================
+package "Server — Middlewares" as MID {
+
+  class AuthMiddleware {
+    + {static} authMiddleware(req, res, next) : void
+  }
+
+  class ErrorHandler {
+    + {static} errorHandler(err, req, res, _next) : void
+  }
+
+  class RoleGuard {
+    + {static} roleGuard(...roles) : Function
+  }
+}
+
+' ============================================================================
+' PACKAGE: Server — Utilities
+' ============================================================================
+package "Server — Utilities" as UTIL {
+
+  class FineCalculator {
+    + {static} FINE_PER_DAY : Int = 2000
+    + {static} calculateFine(dueDate, returnDate) : Int
+  }
+
+  class PaginateHelper {
+    + {static} paginate(model, args, page, limit) : Promise<PageResult>
+  }
+
+  class ResponseHelper {
+    + {static} success(res, data, message, statusCode) : Response
+    + {static} error(res, message, statusCode, errors) : Response
+  }
+}
+
+' ============================================================================
+' PACKAGE: Server — External Crawlers
+' ============================================================================
+package "Server — Crawlers" as CWL {
+
+  class CrawlerUtils {
+    + {static} delay(ms) : Promise
+    + {static} retryFetch(fn, retries, baseDelayMs) : Promise
+    + {static} sanitizeText(raw) : String?
+  }
+
+  class GoogleBooksCrawler {
+    + {static} fetchByIsbn(isbn) : Promise<Object?>
+  }
+
+  class OpenLibraryCrawler {
+    + {static} fetchByIsbn(isbn) : Promise<Object?>
+  }
+}
+
+' ============================================================================
+' PACKAGE: Server — Routes & Validators
+' ============================================================================
+package "Server — Routes & Validators" as RTE {
+
+  class AuthRoutes {
+    + POST /api/auth/register
+    + POST /api/auth/login
+    + GET /api/auth/me
+  }
+
+  class BookRoutes {
+    + GET /api/books
+    + GET /api/books/:id
+    + POST /api/books
+    + PUT /api/books/:id
+    + DELETE /api/books/:id
+  }
+
+  class BorrowRoutes {
+    + POST /api/borrows
+    + POST /api/borrows/self
+    + GET /api/borrows/my
+    + GET /api/borrows
+    + GET /api/borrows/:id
+    + POST /api/borrows/:id/request-return
+    + PATCH /api/borrows/:id/confirm-return
+  }
+
+  class FineRoutes {
+    + GET /api/fines/my
+    + GET /api/fines/revenue
+    + GET /api/fines
+    + PATCH /api/fines/:id/self-pay
+  }
+
+  class UserRoutes {
+    + GET /api/users
+    + POST /api/users
+    + PUT /api/users/:id
+    + PATCH /api/users/:id/toggle-active
+  }
+
+  class WalletRoutes {
+    + GET /api/wallet
+    + POST /api/wallet/add
+    + GET /api/wallet/transactions
+  }
+
+  class DashboardRoutes {
+    + GET /api/dashboard/summary
+    + GET /api/dashboard/my
+  }
+
+  class CrawlRoutes {
+    + POST /api/crawl/isbn/:isbn
+    + POST /api/crawl/batch
+    + GET /api/crawl/logs
+    + DELETE /api/crawl/logs
+  }
+
+  class ReservationRoutes {
+    + POST /api/reservations
+    + GET /api/reservations/my
+    + GET /api/reservations/stats
+    + GET /api/reservations/book/:bookId/queue
+    + DELETE /api/reservations/:id
+  }
+
+  class NotificationRoutes {
+    + GET /api/notifications
+    + GET /api/notifications/unread-count
+    + PATCH /api/notifications/:id/read
+    + PATCH /api/notifications/read-all
+    + DELETE /api/notifications/:id
+  }
+
+  class AuthValidator {
+    + {static} registerValidation : ValidationChain[]
+    + {static} loginValidation : ValidationChain[]
+  }
+
+  class BookValidator {
+    + {static} createBookValidation : ValidationChain[]
+    + {static} updateBookValidation : ValidationChain[]
+  }
+
+  class BorrowValidator {
+    + {static} createBorrowValidation : ValidationChain[]
+    + {static} returnBorrowValidation : ValidationChain[]
+  }
+
+  class UserValidator {
+    + {static} createUserValidation : ValidationChain[]
+    + {static} updateUserValidation : ValidationChain[]
+  }
+}
+
+' ============================================================================
+' PACKAGE: Client — Core (API, Auth, Utils)
+' ============================================================================
+package "Client — Core" as CORE {
+
+  class AuthContext {
+    + {static} useAuth() : {user, token, login, logout, loading}
+    + {static} AuthProvider({children}) : JSX.Element
+  }
+
+  class ApiService {
+    + {static} axiosInstance : AxiosInstance
+    + {static} requestInterceptor : void
+    + {static} responseInterceptor : void
+  }
+}
+
+' ============================================================================
+' PACKAGE: Client — Utility Modules
+' ============================================================================
+package "Client — Utilities" as CUTIL {
+
+  class CoverUtils {
+    + {static} DEFAULT_COVER : String
+    + {static} getCoverSources(book) : String[]
+    + {static} getCategoryColor(category) : String[]
+  }
+
+  class FormatUtils {
+    + {static} formatDate(dateStr) : String
+    + {static} formatCurrency(amount) : String
+  }
+
+  class GsapAnimations {
+    + {static} createParallax(container, layers, config) : void
+    + {static} parallaxLayer(el, speed, smoothness) : Tween
+    + {static} revealSection(selector, config) : Tween
+    + {static} revealStagger(selector, config) : Tween
+    + {static} revealTimeline(steps) : Timeline
+    + {static} hoverBtn(el) : Function
+    + {static} hoverCard(el, liftY) : Function
+    + {static} focusInput(el) : Function
+    + {static} iconFeedback(el) : Function
+    + {static} fadeIn(el, delay, duration) : Tween
+    + {static} fadeInUp(el, delay, duration) : Tween
+    + {static} fadeInScale(el, delay, duration) : Tween
+    + {static} slideInLeft(el, delay, duration) : Tween
+    + {static} staggerFadeIn(elements, staggerEach, fromDelay) : Tween
+    + {static} staggerCards(elements, staggerEach, fromDelay) : Tween
+    + {static} staggerTableRows(elements, staggerEach, fromDelay) : Tween
+    + {static} modalOpen(el, duration) : Tween
+    + {static} modalClose(el, duration) : Tween
+    + {static} staggerNavItems(elements, staggerEach, fromDelay) : Tween
+    + {static} entranceTimeline(steps, onComplete) : Timeline
+    + {static} animateProgressBar(el, widthPct, duration, delay) : Tween
+  }
+}
+
+' ============================================================================
+' PACKAGE: Client — Reusable Components
+' ============================================================================
+package "Client — Components" as COMP {
+
+  class ErrorBoundary {
+    - state : {hasError: Boolean, error: Error?}
+    + {static} getDerivedStateFromError(error) : {hasError, error}
+    + render() : JSX.Element
+  }
+
+  class ProtectedRoute {
+    + children : ReactNode
+    + roles : String[]
+    + render() : JSX.Element
+  }
+
+  class MainLayout {
+    + render() : JSX.Element
+    --
+    + NAV_ITEMS : Array
+  }
+
+  class LoginLogo {
+    + render() : JSX.Element
+  }
+
+  class BookCard {
+    + book : Object
+    + isStaff : Boolean
+    + onDelete : Function
+    + deleting : Boolean
+    + onBorrow : Function
+    + onReserve : Function
+    + userReservation : Object?
+    + render() : JSX.Element
+  }
+
+  class BorrowModal {
+    + book : Object
+    + onClose : Function
+    + onBorrowed : Function
+    + render() : JSX.Element
+  }
+
+  class ReserveModal {
+    + book : Object
+    + onClose : Function
+    + onReserved : Function
+    + render() : JSX.Element
+  }
+
+  class AddCreditsModal {
+    + onClose : Function
+    + onSuccess : Function
+    + render() : JSX.Element
+  }
+
+  class NotificationPanel {
+    + render() : JSX.Element
+  }
+
+  class Pagination {
+    + page : Int
+    + pages : Int
+    + total : Int
+    + onPageChange : Function
+    + loading : Boolean
+    + render() : JSX.Element
+  }
+}
+
+' ============================================================================
+' PACKAGE: Client — Page Components
+' ============================================================================
+package "Client — Pages" as PAGE {
+
+  class App {
+    + render() : JSX.Element
+  }
+
+  class LoginPage {
+    + render() : JSX.Element
+  }
+
+  class RegisterPage {
+    + render() : JSX.Element
+  }
+
+  class Dashboard {
+    + render() : JSX.Element
+  }
+
+  class ReaderDashboard {
+    + render() : JSX.Element
+  }
+
+  class BookListPage {
+    + render() : JSX.Element
+  }
+
+  class BookFormPage {
+    + render() : JSX.Element
+  }
+
+  class UserListPage {
+    + render() : JSX.Element
+  }
+
+  class UserFormPage {
+    + render() : JSX.Element
+  }
+
+  class BorrowListPage {
+    + render() : JSX.Element
+  }
+
+  class BorrowFormPage {
+    + render() : JSX.Element
+  }
+
+  class ReturnPage {
+    + render() : JSX.Element
+  }
+
+  class FineListPage {
+    + render() : JSX.Element
+  }
+
+  class MyWalletPage {
+    + render() : JSX.Element
+  }
+
+  class StudentHistoryPage {
+    + render() : JSX.Element
+  }
+
+  class MyReservationsPage {
+    + render() : JSX.Element
+  }
+
+  class LandingPage {
+    + render() : JSX.Element
+  }
+
+  class LogViewerPage {
+    + render() : JSX.Element
+  }
+
+  class WalletPage {
+    + render() : JSX.Element
+  }
+
+  class BillingPage {
+    + render() : JSX.Element
+  }
+}
+
+' ============================================================================
+' RELATIONSHIPS — Database Model Associations
+' ============================================================================
+User "1" --> "0..*" BorrowRecord : borrows
+User "1" --> "0..*" Fine : fines
+User "1" --> "0..1" Wallet : wallet
+User "1" --> "0..*" Reservation : reservations
+User "1" --> "0..*" Notification : notifications
+
+Book "1" --> "0..*" BorrowItem : borrow_items
+Book "1" --> "0..1" BookMetadata : metadata
+Book "1" --> "0..*" Reservation : reservations
+
+BorrowRecord "1" --> "0..*" BorrowItem : items
+BorrowRecord "1" --> "0..*" Fine : fines
+BorrowRecord "*" --> "1" User : user
+
+BorrowItem "*" --> "1" BorrowRecord : borrow_record
+BorrowItem "*" --> "1" Book : book
+
+Fine "*" --> "1" BorrowRecord : borrow_record
+Fine "*" --> "1" User : user
+Fine "1" --> "0..*" FinePayment : payments
+
+Wallet "1" --> "0..*" WalletTransaction : transactions
+Wallet "1" --> "0..*" FinePayment : fine_payments
+Wallet "1" --> "1" User : user
+
+WalletTransaction "*" --> "1" Wallet : wallet
+
+FinePayment "*" --> "1" Fine : fine
+FinePayment "*" --> "1" Wallet : wallet
+
+Reservation "*" --> "1" User : user
+Reservation "*" --> "1" Book : book
+
+' ============================================================================
+' RELATIONSHIPS — Controller to Service Dependencies
+' ============================================================================
+AuthController ..> AuthService : depends on
+AuthController ..> ResponseHelper : uses
+
+BookController ..> BookService : depends on
+BookController ..> ResponseHelper : uses
+
+BorrowController ..> BorrowService : depends on
+BorrowController ..> ResponseHelper : uses
+
+FineController ..> FineService : depends on
+FineController ..> ResponseHelper : uses
+
+DashboardController ..> DashboardService : depends on
+DashboardController ..> ResponseHelper : uses
+
+UserController ..> UserService : depends on
+UserController ..> ResponseHelper : uses
+
+WalletController ..> WalletService : depends on
+WalletController ..> ResponseHelper : uses
+
+CrawlController ..> CrawlService : depends on
+CrawlController ..> ResponseHelper : uses
+
+ReservationController ..> ReservationService : depends on
+ReservationController ..> ResponseHelper : uses
+
+NotificationController ..> NotificationService : depends on
+NotificationController ..> ResponseHelper : uses
+
+' ============================================================================
+' RELATIONSHIPS — Service to Database / Utility Dependencies
+' ============================================================================
+AuthService ..> PrismaDB : queries
+AuthService ..> ENV : reads
+
+BookService ..> PrismaDB : queries
+BookService ..> PaginateHelper : uses
+
+BorrowService ..> PrismaDB : queries
+BorrowService ..> FineCalculator : uses
+BorrowService ..> PaginateHelper : uses
+BorrowService ..> ReservationService : calls
+
+FineService ..> PrismaDB : queries
+FineService ..> PaginateHelper : uses
+FineService ..> FineCalculator : uses
+FineService ..> WalletService : calls
+
+DashboardService ..> PrismaDB : queries
+
+UserService ..> PrismaDB : queries
+UserService ..> PaginateHelper : uses
+
+WalletService ..> PrismaDB : queries
+
+CrawlService ..> PrismaDB : queries
+CrawlService ..> GoogleBooksCrawler : calls
+CrawlService ..> OpenLibraryCrawler : calls
+CrawlService ..> CrawlerUtils : uses
+CrawlService ..> ENV : reads
+
+ReservationService ..> PrismaDB : queries
+ReservationService ..> NotificationService : calls
+
+NotificationService ..> PrismaDB : queries
+
+SchedulerService ..> PrismaDB : queries
+SchedulerService ..> NotificationService : calls
+SchedulerService ..> ReservationService : calls
+SchedulerService ..> FineCalculator : uses
+
+' ============================================================================
+' RELATIONSHIPS — Middleware Dependencies
+' ============================================================================
+AuthMiddleware ..> ENV : reads
+AuthMiddleware ..> ResponseHelper : uses
+
+ErrorHandler ..> ResponseHelper : uses
+ErrorHandler ..> ENV : reads
+
+RoleGuard ..> ResponseHelper : uses
+
+' ============================================================================
+' RELATIONSHIPS — Routes to Controller / Middleware
+' ============================================================================
+AuthRoutes ..> AuthController : routes to
+AuthRoutes ..> AuthMiddleware : protected by
+
+BookRoutes ..> BookController : routes to
+BookRoutes ..> AuthMiddleware : protected by
+BookRoutes ..> RoleGuard : guarded by
+
+BorrowRoutes ..> BorrowController : routes to
+BorrowRoutes ..> AuthMiddleware : protected by
+BorrowRoutes ..> RoleGuard : guarded by
+
+FineRoutes ..> FineController : routes to
+FineRoutes ..> AuthMiddleware : protected by
+FineRoutes ..> RoleGuard : guarded by
+
+UserRoutes ..> UserController : routes to
+UserRoutes ..> AuthMiddleware : protected by
+UserRoutes ..> RoleGuard : guarded by
+
+WalletRoutes ..> WalletController : routes to
+WalletRoutes ..> AuthMiddleware : protected by
+WalletRoutes ..> RoleGuard : guarded by
+
+DashboardRoutes ..> DashboardController : routes to
+DashboardRoutes ..> AuthMiddleware : protected by
+DashboardRoutes ..> RoleGuard : guarded by
+
+CrawlRoutes ..> CrawlController : routes to
+CrawlRoutes ..> AuthMiddleware : protected by
+CrawlRoutes ..> RoleGuard : guarded by
+
+ReservationRoutes ..> ReservationController : routes to
+ReservationRoutes ..> AuthMiddleware : protected by
+ReservationRoutes ..> RoleGuard : guarded by
+
+NotificationRoutes ..> NotificationController : routes to
+NotificationRoutes ..> AuthMiddleware : protected by
+
+' ============================================================================
+' RELATIONSHIPS — Client Architecture
+' ============================================================================
+App "1" *-- "1" AuthProvider : contains
+App "1" *-- "1" ErrorBoundary : contains
+
+ErrorBoundary --|> Component : extends
+
+AuthProvider "1" *-- "1" AuthContext : provides
+
+App "1" *-- "1" MainLayout : contains
+MainLayout "1" *-- "1" Outlet : renders
+
+LoginPage ..> AuthContext : uses
+LoginPage ..> ApiService : uses
+RegisterPage ..> ApiService : uses
+
+Dashboard ..> AuthContext : uses
+Dashboard ..> ApiService : uses
+Dashboard ..> FormatUtils : uses
+
+ReaderDashboard ..> AuthContext : uses
+ReaderDashboard ..> ApiService : uses
+ReaderDashboard ..> FormatUtils : uses
+ReaderDashboard ..> CoverUtils : uses
+
+BookListPage ..> AuthContext : uses
+BookListPage ..> ApiService : uses
+BookListPage "1" *-- "1" BookCard : contains
+BookListPage "1" *-- "1" BorrowModal : contains
+BookListPage "1" *-- "1" ReserveModal : contains
+BookListPage "1" *-- "1" Pagination : contains
+
+BookFormPage ..> ApiService : uses
+
+UserListPage ..> AuthContext : uses
+UserListPage ..> ApiService : uses
+UserListPage ..> FormatUtils : uses
+
+UserFormPage ..> ApiService : uses
+
+BorrowListPage ..> ApiService : uses
+BorrowListPage ..> FormatUtils : uses
+
+BorrowFormPage ..> ApiService : uses
+
+ReturnPage ..> ApiService : uses
+ReturnPage ..> FormatUtils : uses
+
+FineListPage ..> ApiService : uses
+FineListPage ..> FormatUtils : uses
+
+MyWalletPage ..> ApiService : uses
+MyWalletPage ..> FormatUtils : uses
+MyWalletPage "1" *-- "1" AddCreditsModal : contains
+
+StudentHistoryPage ..> ApiService : uses
+StudentHistoryPage ..> FormatUtils : uses
+StudentHistoryPage ..> CoverUtils : uses
+
+MyReservationsPage ..> ApiService : uses
+MyReservationsPage ..> FormatUtils : uses
+
+LandingPage ..> AuthContext : uses
+
+LogViewerPage ..> ApiService : uses
+
+MainLayout "1" *-- "1" NotificationPanel : contains
+
+ProtectedRoute ..> AuthContext : uses
+
+BookCard ..> CoverUtils : uses
+BorrowModal ..> CoverUtils : uses
+ReserveModal ..> CoverUtils : uses
+
+' ============================================================================
+' NOTES
+' ============================================================================
+note "All client-server communication occurs\nvia REST API over HTTP\n(JSON request/response)" as N_API
+N_API .. PAGE
+N_API .. CORE
+
+@enduml
