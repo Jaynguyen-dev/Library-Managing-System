@@ -37,7 +37,7 @@
 
 ## 🏗️ System Architecture
 
-The application follows a classic **three-tier Client-Server architecture**, tightly integrating the frontend presentation layer, server-side application logic, and relational data persistence into a single deployable unit.
+The application follows a classic **Client-Server architecture**, tightly integrating the frontend presentation layer, server-side application logic, and relational data persistence into a single deployable unit.
 
 ```mermaid
 graph TD
