@@ -347,6 +347,8 @@ final-project/
 ---
 ## Demo Visualization
 
+### Register Panel
+![Login Screen](demo/register.png)
 ### Login Screen
 ![Login Screen](demo/log_in_panel.png)
 
